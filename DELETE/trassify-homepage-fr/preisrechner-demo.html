@@ -1,0 +1,1132 @@
+<!DOCTYPE html><!--  Last Published: Mon Mar 16 2026 08:18:07 GMT+0000 (Coordinated Universal Time)  -->
+<html data-wf-page="68cc41ac1f0433e126dea23c" data-wf-site="67630da035a047b9af9a7827" lang="fr-FR">
+<head>
+  <meta charset="utf-8">
+  <title>Démo du calculateur de prix</title>
+  <meta content="Démo du calculateur de prix" property="og:title">
+  <meta content="Démo du calculateur de prix" property="twitter:title">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <link href="css/normalize.css" rel="stylesheet" type="text/css">
+  <link href="css/webflow.css" rel="stylesheet" type="text/css">
+  <link href="css/trassify.webflow.css" rel="stylesheet" type="text/css">
+  <script type="text/javascript">!function(o,c){var n=c.documentElement,t=" w-mod-";n.className+=t+"js",("ontouchstart"in o||o.DocumentTouch&&c instanceof DocumentTouch)&&(n.className+=t+"touch")}(window,document);</script>
+  <link href="images/favicon.png" rel="shortcut icon" type="image/x-icon">
+  <link href="images/webclip.png" rel="apple-touch-icon"><!-- -Text markieren Farbe Start- -->
+  <style>
+::selection {background: var(--base-color-brand--trassify-grün); color: #fff; text-shadow: none;}
+</style>
+  <!-- -Text markieren Farbe Ende- -->
+  <!-- -Cookie Banner Start- -->
+  <script type="text/javascript" charset="UTF-8" src="//cdn.cookie-script.com/s/c3ff2cee4ab5cc6fa9eb6f56427b95e6.js"></script>
+  <!-- -Cookie Banner Ende- -->
+  <style>
+/*  styling scrollbars  */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px #a5aaad;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #6b6b6b;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a6c4a1;
+}
+</style> <!--  Leaflet  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!--  Leaflet.draw  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <!--  Geocoder (Nominatim)  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <!--  Turf.js  -->
+  <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+  <!--  togeojson (KML/GPX -> GeoJSON)  -->
+  <script src="https://unpkg.com/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
+  <!--  shpjs (Shapefile .zip -> GeoJSON)  -->
+  <script src="https://unpkg.com/shpjs@6.1.0/dist/shp.min.js"></script>
+  <!--  dxf-parser (DXF -> JS-Objekte)  -->
+  <script src="https://unpkg.com/dxf-parser@1.4.11/dist/dxf-parser.js"></script>
+  <style>html.trassify-fr-pending body{visibility:hidden;}</style>
+  <script>document.documentElement.classList.add("trassify-fr-pending");window.setTimeout(function(){document.documentElement.classList.remove("trassify-fr-pending");},3000);</script>
+  <script src="js/fr-site.js" type="text/javascript" defer></script>
+</head>
+<body>
+  <div class="calc-styling w-embed">
+    <style>
+html, body, #map { height: 100%; margin: 0; }
+.stats-control {
+  background: rgba(255,255,255,0.96);
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  min-width: 320px; max-width: 420px;
+}
+.stats-control h4 { margin: 0 0 6px; font-size: 14px; }
+.stats-control table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.stats-control td { padding: 2px 0; vertical-align: top; }
+.stats-control td:first-child { color: #333; }
+.stats-control .muted { color: #666; }
+.section-title { margin: 10px 0 4px; font-weight: 600; }
+.row { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
+.row label { min-width: 110px; }
+.price { font-weight: 700; font-size: 16px; text-align: right; }
+.badge { display:inline-block; padding:2px 6px; border-radius:6px; background:#eef2ff; border:1px solid #c7d2fe; font-size:12px;}
+.leaflet-container .leaflet-control-layers,
+.leaflet-container .leaflet-bar { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+/* Icon-Import-Button im Leaflet-Bar-Stil */
+.leaflet-control.import-bar a {
+  width: 34px; height: 34px; line-height: 34px; display: block; text-align: center;
+}
+.leaflet-control.import-bar svg { width: 18px; height: 18px; vertical-align: middle; }
+/* Geocoder nach links oben, Optik etwas kompakter */
+.leaflet-control-geocoder { margin-left: 10px; }
+.leaflet-control-geocoder input {
+  height: 30px; font-size: 13px; padding: 0 8px;
+}
+/* CHANGE: Drag&Drop Overlay */
+#map { position: relative; } /* damit Overlay absolut positioniert werden kann */
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 23, 0.35); /* leichtes Abdunkeln */
+  z-index: 1002; /* über Leaflet-Kacheln & -Overlays, unter Modals falls vorhanden */
+  transition: opacity 120ms ease;
+  opacity: 1;
+}
+.drop-overlay.hidden {
+  pointer-events: none;
+  opacity: 0;
+}
+.drop-overlay__panel {
+  box-sizing: border-box;
+  min-width: 320px;
+  max-width: 560px;
+  width: 66%;
+  padding: 22px 18px;
+  background: rgba(255,255,255,0.98);
+  border: 2px dashed #A6C4A1;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+  cursor: pointer;
+}
+.drop-overlay__icon { margin-bottom: 8px; }
+.drop-overlay__icon svg { display: inline-block; }
+.drop-overlay__headline {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+.drop-overlay__sub {
+  color: #4b5d46;
+  font-size: 13px;
+}
+/* CHANGE: Basemap Toggle Styling */
+.leaflet-control.basemap-toggle {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.basemap-toggle .toggle {
+  position: relative;
+  width: 76px;
+  height: 32px;
+  padding: 0 10px;
+  background: #111827;
+  border: 2px solid #000;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  outline: none;
+}
+.basemap-toggle .toggle__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  background: #ffffff;
+  border-radius: 999px;
+  transition: left 160ms ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+.basemap-toggle .toggle.is-sat .toggle__knob {
+  left: calc(100% - 27px);
+}
+.basemap-toggle .toggle__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #A6C4A1;
+  opacity: .45;
+  transition: opacity 160ms ease;
+}
+.basemap-toggle .toggle__icon--map { margin-right: 22px; }
+.basemap-toggle .toggle__icon--sat { margin-left: 22px; }
+.basemap-toggle .toggle:not(.is-sat) .toggle__icon--map { opacity: 1; }
+.basemap-toggle .toggle.is-sat .toggle__icon--sat { opacity: 1; }
+@media (prefers-color-scheme: light) {
+  .basemap-toggle .toggle { background: #fafafa; border-color: #111; }
+}
+/* CHANGE: Loading-UI im Rechner */
+.loading-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+}
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0,0,0,0.15);
+  border-top-color: #A6C4A1;
+  border-radius: 50%;
+  animation: spin 750ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+/* ====== Toggle Switch (iOS-Style) ====== */
+.switch {
+  --w: 44px;
+  --h: 24px;
+  --pad: 3px;
+  --on:  #A6C4A1;
+  --off: #c7ced9;
+  --knob: #fff;
+  --ring: 0 0 0 3px rgba(166,196,161,.25);
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.switch input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch .switch__track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: var(--w);
+  height: var(--h);
+  border-radius: calc(var(--h) / 2);
+  background: var(--off);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  transition: background-color .2s ease, box-shadow .2s ease;
+}
+.switch .switch__knob {
+  position: absolute;
+  top: var(--pad);
+  left: var(--pad);
+  width: calc(var(--h) - var(--pad) * 2);
+  height: calc(var(--h) - var(--pad) * 2);
+  background: var(--knob);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.2), 0 0 0 1px rgba(0,0,0,.06);
+  transform: translateX(0);
+  transition: transform .2s ease;
+}
+.switch input[type="checkbox"]:checked + .switch__track {
+  background: var(--on);
+}
+.switch input[type="checkbox"]:checked + .switch__track .switch__knob {
+  transform: translateX(calc(var(--w) - var(--h)));
+}
+.switch input[type="checkbox"]:focus-visible + .switch__track {
+  box-shadow: var(--ring);
+}
+@media (prefers-color-scheme: dark) {
+  .switch { --off:#3a3f4a; --on:#A6C4A1; --ring:0 0 0 3px rgba(166,196,161,.35); }
+}
+/* ========== Buttons ========== */
+.btn-primary{
+  appearance:none; border:0; border-radius:10px;
+  padding:10px 14px; font:600 13px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:#A6C4A1; color:#fff; cursor:pointer;
+  box-shadow:0 1px 2px rgba(0,0,0,.1);
+  transition:filter .15s ease, transform .05s ease;
+}
+.btn-primary:hover{ filter:brightness(1.04); }
+.btn-primary:active{ transform:translateY(1px); }
+.btn-primary:disabled{ opacity:.6; cursor:not-allowed; }
+.btn-secondary{
+  appearance:none; border:0; border-radius:10px;
+  padding:10px 14px; font:600 13px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:#e5e7eb; color:#111827; cursor:pointer;
+  transition:filter .15s ease, transform .05s ease;
+}
+.btn-secondary:hover{ filter:brightness(1.02); }
+.btn-secondary:active{ transform:translateY(1px); }
+/* ========== Modal Backdrop + Container ========== */
+.modal-backdrop{
+  position:fixed; inset:0; z-index:3000;
+  display:none; align-items:center; justify-content:center;
+  background:rgba(2,6,23,.45);
+  backdrop-filter:saturate(120%) blur(2px);
+}
+.modal{
+  width:min(560px,94vw);
+  background:#fff; color:#0f172a;
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  padding:16px;
+}
+.modal h3{
+  margin:0 0 12px;
+  font:600 16px/1.25 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+/* ========== Formular-Layout ========== */
+.modal .grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.modal .grid .full{ grid-column:1 / -1; }
+.modal label{
+  display:block; font-size:12px; color:#374151; margin-bottom:4px;
+}
+.modal input,
+.modal textarea{
+  width:100%; box-sizing:border-box;
+  padding:10px 12px;
+  border:1px solid #cbd5e1; border-radius:10px;
+  background:#fff; color:#0f172a;
+  font:13px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.modal input:focus,
+.modal textarea:focus{
+  outline:none;
+  border-color:#A6C4A1;
+  box-shadow:0 0 0 3px rgba(166,196,161,.18);
+}
+.modal textarea{ min-height:96px; resize:vertical; }
+/* Aktionen unten rechts */
+.modal .actions{
+  display:flex; gap:8px; justify-content:flex-end; margin-top:14px;
+}
+/* ========== Consent + Fehlermeldungen ========== */
+.consent-row{
+  display:flex; gap:10px; align-items:flex-start;
+  font-size:12px; color:#111827;
+}
+.consent-row input{ margin-top:3px; }
+.error{
+  display:none; margin-top:4px;
+  color:#dc2626; font-size:12px;
+}
+/* ========== Responsive ========== */
+@media (max-width: 560px){
+  .modal{ padding:14px; }
+  .modal .grid{ grid-template-columns:1fr; }
+}
+/* ========== Dark Mode (optional, dezent) ========== */
+@media (prefers-color-scheme: dark){
+  .modal{ background:#0b1220; color:#e5e7eb; }
+  .modal input, .modal textarea{
+    background:#0f172a; color:#e5e7eb; border-color:#233146;
+  }
+  .modal input:focus, .modal textarea:focus{
+    border-color:#A6C4A1; box-shadow:0 0 0 3px rgba(166,196,161,.25);
+  }
+  .btn-secondary{ background:#1f2937; color:#e5e7eb; }
+}
+/* ========== Motion Reduction (UX) ========== */
+@media (prefers-reduced-motion: reduce){
+  .btn-primary, .btn-secondary,
+  .modal input, .modal textarea{ transition:none; }
+}
+/* mehr Abstand nach unten für Controls oben */
+.leaflet-control-container .leaflet-top.leaflet-left {
+  top: 5rem;
+}
+.leaflet-control-container .leaflet-top.leaflet-right {
+  top: 5rem;
+}
+  </style>
+  </div>
+  <div class="map-nav"><img src="images/logo.png" loading="lazy" sizes="(max-width: 2378px) 100vw, 2378px" srcset="images/logo-p-500.png 500w, images/logo-p-800.png 800w, images/logo-p-1080.png 1080w, images/logo-p-1600.png 1600w, images/logo.png 2378w" alt="" class="image-36">
+    <div>x</div><img src="images/schuessler-plan-logo.svg" loading="lazy" alt="" class="image-36 is-sp">
+  </div>
+  <div id="map" class="map"></div>
+  <div data-w-id="4153d779-f9ab-2a66-70e8-82e15570cdc0" style="display:flex;opacity:1" class="map-loading">
+    <div class="overlay-map"></div>
+    <div data-w-id="055b79d3-957b-fd13-d2a5-ab841486fdca" data-is-ix2-target="1" class="lottie-animation" data-animation-type="lottie" data-src="documents/line1.json" data-loop="1" data-direction="1" data-autoplay="0" data-renderer="svg" data-default-duration="0" data-duration="0" data-ix2-initial-state="0"></div>
+  </div>
+  <script src="https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=67630da035a047b9af9a7827" type="text/javascript" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="js/webflow.js" type="text/javascript"></script><!-- -Copyright Year Start- -->
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.copyright-year').forEach(el => {
+        el.textContent = new Date().getFullYear();
+    });
+});
+</script>
+  <!-- -Copyright Year End- -->
+  <!--  CSS für MouseFollower und Styling  -->
+  <style>
+    @import url('https://unpkg.com/mouse-follower@1/dist/mouse-follower.min.css');
+    .mf-cursor:before {
+        background: black;
+    }
+    .mf-cursor.-text:before {
+        background: white;
+        color: black;
+        z-index: 600;
+        opacity: 1;
+        transform: scale(2.5);
+    }
+    .mf-cursor-text {
+        color: black;
+    }
+    .magnetic {
+        width: 100px;
+        height: 100px;
+        background: black;
+        border-radius: 10px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: auto;
+    }
+</style>
+  <!--  MouseFollower  -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
+  <script src="https://unpkg.com/mouse-follower@1/dist/mouse-follower.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let cursor = null;
+        // Seiten, auf denen der MouseFollower NICHT aktiv sein soll
+        const excludedPaths = [
+            "/projekt-a661",
+        ];
+        function initMouseFollower() {
+            const currentPath = window.location.pathname;
+            // Check: Ist die aktuelle Seite in den Ausnahmen?
+            const isExcluded = excludedPaths.includes(currentPath);
+            if (window.innerWidth > 1024 && !isExcluded) {
+                if (!cursor) {
+                    cursor = new MouseFollower();
+                }
+            } else {
+                if (cursor) {
+                    cursor.destroy();
+                    cursor = null;
+                }
+            }
+        }
+        initMouseFollower();
+        window.addEventListener('resize', initMouseFollower);
+    });
+</script>
+  <script>
+/* =========================
+   FORMSPARK + KML HELPERS
+========================= */
+const FORMSPARK_ID = "1Lihz34qb"; // <— HIER einsetzen!
+const FORMSPARK_ENDPOINT = `https://submit-form.com/${FORMSPARK_ID}`;
+function escapeXml(s){ return String(s??'').replace(/[<>&'"]/g, c=>({ '<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;' }[c])); }
+function turfPolygonToKML(turfPoly, name="Trassify-Auswahl") {
+  if (!turfPoly || turfPoly.type!=='Feature' || turfPoly.geometry?.type!=='Polygon') return '';
+  const rings = turfPoly.geometry.coordinates;
+  const asStr = ring => ring.map(([lng,lat]) => `${lng},${lat},0`).join(' ');
+  const outer = asStr(rings[0]||[]);
+  const inners=(rings.slice(1)||[]).map(r=>`<innerBoundaryIs><LinearRing><coordinates>${asStr(r)}</coordinates></LinearRing></innerBoundaryIs>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <name>${escapeXml(name)}</name>
+  <Placemark>
+    <name>${escapeXml(name)}</name>
+    <Polygon>
+      <outerBoundaryIs><LinearRing><coordinates>${outer}</coordinates></LinearRing></outerBoundaryIs>
+      ${inners}
+    </Polygon>
+  </Placemark>
+</Document>
+</kml>`;
+}
+async function postToFormspark(payload){
+  const resp = await fetch(FORMSPARK_ENDPOINT, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!resp.ok) throw new Error(`Formspark HTTP ${resp.status}`);
+  try{ return await resp.json(); }catch{ return {}; }
+}
+/* =========================
+   MAP + UI
+========================= */
+const map = L.map('map');
+map.fitBounds([[47.2701114, 5.8663153],[55.099161, 15.0418962]]);
+const baseOSM = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'&copy; OpenStreetMap-Mitwirkende'});
+const baseSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19, attribution:'Bilddaten © Esri, Maxar, Earthstar Geographics, und Mitwirkende'});
+baseOSM.addTo(map);
+const BasemapToggle = L.Control.extend({
+  options:{position:'topright'},
+  onAdd:function(){
+    const c=L.DomUtil.create('div','leaflet-control basemap-toggle');
+    c.innerHTML=`<button class="toggle" type="button" aria-label="Basiskarte wechseln">
+      <span class="toggle__icon toggle__icon--map">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>
+      </span>
+      <span class="toggle__knob"></span>
+      <span class="toggle__icon toggle__icon--sat">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7l7 7"/><path d="M16 4l4 4"/><path d="M10.5 13.5l-3 3a2.1 2.1 0 0 1-3-3l3-3"/><circle cx="12" cy="12" r="2.5"/></svg>
+      </span>
+    </button>`;
+    const btn=c.querySelector('.toggle');
+    const setMode=(m)=>{ if(m==='sat'){ map.removeLayer(baseOSM); baseSat.addTo(map); btn.classList.add('is-sat'); localStorage.setItem('basemap','sat'); }
+                         else{ map.removeLayer(baseSat); baseOSM.addTo(map); btn.classList.remove('is-sat'); localStorage.setItem('basemap','map'); } };
+    btn.addEventListener('click',()=>setMode(btn.classList.contains('is-sat')?'map':'sat'));
+    L.DomEvent.disableClickPropagation(c);
+    setMode(localStorage.getItem('basemap')||'map');
+    return c;
+  }
+});
+map.addControl(new BasemapToggle());
+// Geocoder
+const geocoder = L.Control.geocoder({position:'topleft', defaultMarkGeocode:false, placeholder:'Adresse / Straße suchen…'})
+.on('markgeocode', e=>{
+  const b=e.geocode.bbox, p=L.polygon([[b.getSouthEast().lat,b.getSouthEast().lng],[b.getNorthEast().lat,b.getNorthEast().lng],[b.getNorthWest().lat,b.getNorthWest().lng],[b.getSouthWest().lat,b.getSouthWest().lng]]);
+  map.fitBounds(p.getBounds(),{maxZoom:17});
+}).addTo(map);
+// Import-Button
+const ImportControl = L.Control.extend({
+  options:{position:'topleft'},
+  onAdd:function(){
+    const container=L.DomUtil.create('div','leaflet-control leaflet-bar import-bar');
+    const a=L.DomUtil.create('a','',container);
+    a.href='#'; a.title='Datei importieren'; a.setAttribute('aria-label','Datei importieren');
+    a.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/><path d="M12 12v9"/><path d="m8 16 4-4 4 4"/></svg>`;
+    const input=L.DomUtil.create('input','',container); input.type='file'; input.style.display='none'; input.multiple=true;
+    L.DomEvent.on(a,'click',e=>{L.DomEvent.stop(e); input.click();});
+    L.DomEvent.disableClickPropagation(container);
+    input.addEventListener('change',e=>handleFiles(e.target.files));
+    return container;
+  }
+});
+map.addControl(new ImportControl());
+// Drag&Drop Overlay (optional)
+(function initDragAndDrop(){
+  const mapEl=document.getElementById('map'); if(!mapEl) return;
+  const dndInput=document.createElement('input'); dndInput.type='file'; dndInput.multiple=true; dndInput.style.display='none'; document.body.appendChild(dndInput);
+  dndInput.addEventListener('change',e=>{ if(e.target.files?.length) handleFiles(e.target.files); });
+  const overlay=document.createElement('div'); overlay.className='drop-overlay hidden';
+  overlay.innerHTML=`<div class="drop-overlay__panel" role="dialog" aria-label="Dateien importieren">
+    <div class="drop-overlay__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/><path d="M12 12v9"/><path d="m8 16 4-4 4 4"/></svg>
+    </div>
+    <div class="drop-overlay__text">
+      <div class="drop-overlay__headline">Dateien hierher ziehen, um zu importieren</div>
+      <div class="drop-overlay__sub">…oder klicken, um auszuwählen</div>
+    </div>
+  </div>`;
+  mapEl.appendChild(overlay); overlay.addEventListener('click',()=>dndInput.click());
+  let dragCounter=0; const hasFiles=e=>e?.dataTransfer && Array.from(e.dataTransfer.types||[]).includes('Files');
+  const show=()=>overlay.classList.remove('hidden'); const hide=()=>{overlay.classList.add('hidden'); dragCounter=0;};
+  ['dragenter','dragover','dragleave','drop'].forEach(evt=>mapEl.addEventListener(evt,e=>e.preventDefault()));
+  mapEl.addEventListener('dragenter',e=>{ if(!hasFiles(e)) return; dragCounter++; show(); });
+  mapEl.addEventListener('dragover',e=>{ if(!hasFiles(e)) return; e.dataTransfer.dropEffect='copy'; });
+  mapEl.addEventListener('dragleave',()=>{ dragCounter=Math.max(0,dragCounter-1); if(dragCounter===0) hide(); });
+  mapEl.addEventListener('drop',e=>{ if(!hasFiles(e)){hide(); return;} const files=e.dataTransfer.files; if(files?.length) handleFiles(files); hide(); });
+  window.addEventListener('drop',hide); window.addEventListener('dragend',hide);
+})();
+// Zeichnen
+const drawnItems = new L.FeatureGroup().addTo(map);
+const drawControl = new L.Control.Draw({ draw:{ polygon:{allowIntersection:false, showArea:true, metric:true, shapeOptions:{color:'#1d4ed8', weight:2}}, polyline:false, circle:false, circlemarker:false, marker:false, rectangle:false }, edit:{ featureGroup:drawnItems, edit:true, remove:true }});
+map.addControl(drawControl);
+// Visualisierung
+const roadsLayer = L.geoJSON(null,{ style:f=>{ const c={motorway:'#ef4444',trunk:'#f59e0b',primary:'#f59e0b',secondary:'#f59e0b',tertiary:'#22c55e',unclassified:'#22c55e',residential:'#22c55e',living_street:'#22c55e',service:'#22c55e',default:'#64748b'}; const k=f.properties.highway||'default'; return {color:c[k]||c.default, weight:3, opacity:0.9}; } }).addTo(map);
+const fillLayer = L.geoJSON(null,{ style:f=>({color:f.properties.kind==='building'?'#0ea5e9':'#60a5fa', weight:1, fillOpacity:0.25}) }).addTo(map);
+// Klassen / Parameter
+const CLASS_MAP = {
+  motorways:new Set(['motorway','motorway_link']),
+  mainroads:new Set(['trunk','trunk_link','primary','primary_link','secondary','secondary_link']),
+  localroads:new Set(['tertiary','tertiary_link','unclassified','residential','living_street','service']),
+  paths:new Set(['path','footway','cycleway','track'])
+};
+/* =========================
+   TUNABLE PRICING CONSTANTS (advanced)
+========================= */
+// (A) Basis
+const BASE_RATE_PER_M2        = 0.132;
+const CONSERVATIVE_DISCOUNT   = 0.85;
+// (B) Effektive Fläche → Faktor
+const AREA_FACTOR_PIVOT_M2    = 5000;
+const AREA_FACTOR_SLOPE       = 0.12;
+const AREA_FACTOR_MIN         = 0.90;
+const AREA_FACTOR_MAX         = 1.30;
+// (C) Vermessung → Faktor
+const SURVEY_FACTOR_YES       = 1.29;
+const SURVEY_FACTOR_NO        = 1.00;
+// (D) Straßen-Einfluss → Faktor
+const ROAD_WEIGHT_KM          = 0.6;
+const ROAD_WEIGHT_COUNT       = 0.4;
+const ROAD_CATEGORY_WEIGHTS = {
+  motorways: 1.8,
+  mainroads: 1.4,
+  localroads: 1.0,
+  paths:     0.6
+};
+const ROAD_INTENSITY_MULT     = 0.00025;
+// (E) Leitungsauskunft
+const LEI_MIN_FEE_EUR     = 500;     // bis inkl. 5.000 m²
+const LEI_THRESHOLD_M2    = 5000;
+const LEI_RATE_EUR_PER_M2 = 0.0235;  // Basisrate > 5.000 m²
+// Degression + Korridor-Abschlag
+const LEI_DECAY_START_M2        = 50000;
+const LEI_DECAY_SPAN_M2         = 350000;
+const LEI_RATE_EUR_PER_M2_LARGE = 0.0040;
+const LEI_CORRIDOR_MULT         = 0.90;
+// (F) Mindest-/Kleinstflächen-Logik (Core)
+const WORK_MIN_CORE_EUR     = 1500;
+const WORK_MIN_THRESHOLD_M2 = 12000;
+// (G) Small-Area-Booster
+const SMALL_AREA_THRESHOLD_M2 = 20000;
+const SMALL_AREA_BONUS_MAX    = 2.35;
+const SMALL_AREA_EXP          = 0.8;
+// (H) Autobahn-Korridor-Rabatt (Core)
+const CORRIDOR_CORE_MULT = 0.13;
+// (I) Außerorts- & Volumen-Rabatt (nur Core)
+const RURAL_CORE_MULT          = 0.50;
+const VOLUME_DISCOUNT_START_M2 = 100000;
+const VOLUME_DISCOUNT_END_M2   = 700000;
+const VOLUME_DISCOUNT_MIN      = 0.30; // 30%
+// Trassenbreiten (m)
+const CORRIDOR_WIDTH = {
+  motorway:26, motorway_link:22, trunk:22, trunk_link:20, primary:20, primary_link:18,
+  secondary:16, secondary_link:14, tertiary:11, tertiary_link:11,
+  unclassified:8, residential:8, living_street:7, service:6,
+  path:3, footway:3, cycleway:3, track:4,
+  default:10
+};
+/* =========================
+   STATE
+========================= */
+const last = {
+  areaTotalM2:0, areaBuildingsM2:0, areaWaterM2:0, areaEffectiveM2:0,
+  roadStats:null, roadAreasM2:null,
+  inferred:{ label:'-', factor:1.0, kind:'neben' },
+  loading:false,
+  vermessung:'Ja',
+  leiauskunft:'Ja',
+  currentTurfPoly:null, // <— wichtig für KML & Anfrage
+};
+/* =========================
+   UI: Preisrechner
+========================= */
+const StatsControl = L.Control.extend({
+  options:{position:'bottomright'},
+  onAdd:function(){ this._div=L.DomUtil.create('div','stats-control'); this.render(); L.DomEvent.disableClickPropagation(this._div); return this._div; },
+  render:function(){
+    if(last.loading){
+      this._div.innerHTML = `<h4>Auswertung im Polygon</h4>
+        <div class="loading-row"><span class="spinner" aria-hidden="true"></span><span>Berechne&nbsp;…</span></div>
+        <div class="muted">Gebäude, Wasser und Straßen werden analysiert.</div>`;
+      return;
+    }
+    const hasData = last.roadStats!==null && last.areaTotalM2>0;
+    const fmtN=v=>v.toLocaleString(undefined,{maximumFractionDigits:0});
+    const fmtM=v=>v.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+    const fmtM2=v=>v.toLocaleString(undefined,{maximumFractionDigits:0});
+    if(!hasData){ this._div.innerHTML = `<h4>Auswertung im Polygon</h4><div class="muted">Zeichne ein Polygon oder importiere Geodaten.</div>`; return; }
+    const r=last.roadStats;
+    this._div.innerHTML = `
+      <h4>Auswertung im Polygon</h4>
+      <table>
+        <tr><td><strong>Gesamtfläche</strong></td><td style="text-align:right;">${fmtM2(last.areaTotalM2)} m²</td></tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr><td><em>Unrelevante Flächen</em></td><td></td></tr>
+        <tr><td>Gebäude</td><td style="text-align:right;">${fmtM2(last.areaBuildingsM2)} m²</td></tr>
+        <tr><td>Wasser</td><td style="text-align:right;">${fmtM2(last.areaWaterM2)} m²</td></tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr><td><strong>Effektive Gesamtfläche</strong></td><td style="text-align:right;"><strong>${fmtM2(last.areaEffectiveM2)} m²</strong></td></tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr><td><strong>Straßen</strong></td><td></td></tr>
+        <tr><td>Autobahnen</td><td style="text-align:right;">${fmtN(r.motorways.count)}× &nbsp;|&nbsp; ${fmtM(r.motorways.km)} km</td></tr>
+        <tr><td>Landstraßen</td><td style="text-align:right;">${fmtN(r.mainroads.count)}× &nbsp;|&nbsp; ${fmtM(r.mainroads.km)} km</td></tr>
+        <tr><td>Nebenstraßen</td><td style="text-align:right;">${fmtN(r.localroads.count)}× &nbsp;|&nbsp; ${fmtM(r.localroads.km)} km</td></tr>
+        <tr><td>Wege</td><td style="text-align:right;">${fmtN(r.paths.count)}× &nbsp;|&nbsp; ${fmtM(r.paths.km)} km</td></tr>
+        <tr><td><strong>Gesamt</strong></td><td style="text-align:right;"><strong>${fmtN(r.total.count)}× &nbsp;|&nbsp; ${fmtM(r.total.km)} km</strong></td></tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr><td><strong>Berechnungsfläche</strong></td><td style="text-align:right;">Effektive Gesamtfläche</td></tr>
+        <tr>
+          <td>Vermessung</td>
+          <td style="text-align:right;">
+            <label class="switch" title="Vermessung">
+              <input type="checkbox" id="vermSwitch" role="switch" aria-label="Vermessung" ${last.vermessung==='Ja'?'checked':''}>
+              <span class="switch__track"><span class="switch__knob"></span></span>
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td>Leitungsauskunft</td>
+          <td style="text-align:right;">
+            <label class="switch" title="Leitungsauskunft">
+              <input type="checkbox" id="leiSwitch" role="switch" aria-label="Leitungsauskunft" ${last.leiauskunft==='Ja'?'checked':''}>
+              <span class="switch__track"><span class="switch__knob"></span></span>
+            </label>
+          </td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr><td><strong>Preis</strong></td><td class="price" id="priceOut" style="text-align:right;"><strong>–</strong></td></tr>
+        <tr>
+          <td></td>
+          <td style="text-align:right; padding-top:6px;">
+            <button id="sendInquiryBtn" class="btn-primary" type="button">Anfrage senden</button>
+          </td>
+        </tr>
+      </table>
+    `;
+    const out=this._div.querySelector('#priceOut');
+    const vermSwitch=this._div.querySelector('#vermSwitch');
+    const leiSwitch=this._div.querySelector('#leiSwitch');
+    const calcAndRender=()=>{
+      last.vermessung = vermSwitch.checked ? 'Ja' : 'Nein';
+      last.leiauskunft = leiSwitch.checked ? 'Ja' : 'Nein';
+      last.inferred = inferLage(last);
+      const price = calcPriceAuto(last.areaEffectiveM2, last.inferred, last.vermessung, last.leiauskunft);
+      out.textContent = price > 0 ? formatCurrency(price) : '–';
+    };
+    vermSwitch.addEventListener('change',calcAndRender);
+    leiSwitch.addEventListener('change',calcAndRender);
+    calcAndRender();
+    ensureInquiryModal(); // einmalig anhängen, falls noch nicht vorhanden
+    const sendBtn = this._div.querySelector('#sendInquiryBtn');
+    sendBtn?.addEventListener('click', openInquiryModal);
+  }
+});
+const statsControl=new StatsControl(); map.addControl(statsControl);
+function formatCurrency(n){ return n.toLocaleString(undefined,{style:'currency', currency:'EUR', maximumFractionDigits:0}); }
+/* =========================
+   PREISLOGIK (advanced)
+========================= */
+// Small-Area-Booster
+function smallAreaFactor(B){
+  if (B >= SMALL_AREA_THRESHOLD_M2) return 1;
+  const t = Math.pow(1 - B / SMALL_AREA_THRESHOLD_M2, SMALL_AREA_EXP);
+  return 1 + SMALL_AREA_BONUS_MAX * t;
+}
+// Volumenrabatt (nur Core)
+function volumeDiscount(B){
+  if (B <= VOLUME_DISCOUNT_START_M2) return 1;
+  if (B >= VOLUME_DISCOUNT_END_M2)   return VOLUME_DISCOUNT_MIN;
+  const t = (B - VOLUME_DISCOUNT_START_M2) / (VOLUME_DISCOUNT_END_M2 - VOLUME_DISCOUNT_START_M2);
+  return 1 - t * (1 - VOLUME_DISCOUNT_MIN); // 1.00 → 0.30
+}
+// Autobahn-Korridor-Erkenner
+function isMotorwayCorridor(ctx){
+  const r = ctx.roadStats || emptyRoadStats();
+  const kmTot = Math.max(1e-6, r.total.km);
+  const shareMotor = r.motorways.km / kmTot;
+  const shareOther = (r.mainroads.km + r.localroads.km + r.paths.km) / kmTot;
+  const buildingShare = ctx.areaBuildingsM2 / Math.max(1, ctx.areaTotalM2);
+  return (shareMotor >= 0.60) && (shareOther <= 0.40) && (buildingShare <= 0.15);
+}
+// Leitungsauskunft (Stückweise + Degression + optionaler Korridor-Abschlag)
+function calcLeiCost(B){
+  if (B <= LEI_THRESHOLD_M2) return LEI_MIN_FEE_EUR;
+  let rate = LEI_RATE_EUR_PER_M2;
+  if (B > LEI_DECAY_START_M2) {
+    const t = Math.min(1, (B - LEI_DECAY_START_M2) / LEI_DECAY_SPAN_M2);
+    rate = LEI_RATE_EUR_PER_M2 + t * (LEI_RATE_EUR_PER_M2_LARGE - LEI_RATE_EUR_PER_M2);
+  }
+  if (isMotorwayCorridor(last)) rate *= LEI_CORRIDOR_MULT;
+  return B * rate;
+}
+// Hauptfunktion
+function calcPriceAuto(B, inferred, surveyYN, leiYN){
+  if (!isFinite(B) || B <= 0) return 0;
+  // Core vor Vermessung
+  const base = B * BASE_RATE_PER_M2 * CONSERVATIVE_DISCOUNT;
+  const areaFactorRaw = 1 + AREA_FACTOR_SLOPE * Math.log(Math.max(1, B) / AREA_FACTOR_PIVOT_M2);
+  const areaFactor = clamp(areaFactorRaw, AREA_FACTOR_MIN, AREA_FACTOR_MAX);
+  const roadFactor = 1 + ROAD_INTENSITY_MULT * calcRoadIntensityScore(last);
+  let core = base * areaFactor * roadFactor * smallAreaFactor(B);
+  // Core-Mindestpreis
+  if (B <= WORK_MIN_THRESHOLD_M2) core = Math.max(core, WORK_MIN_CORE_EUR);
+  // Lage- & Volumenrabatte NUR auf den Core
+  let coreMult = 1;
+  if (inferred?.kind === 'ausser') coreMult *= RURAL_CORE_MULT; // Außerorts
+  coreMult *= volumeDiscount(B);                                // Volumenrabatt
+  if (isMotorwayCorridor(last)) coreMult *= CORRIDOR_CORE_MULT; // Autobahn-Korridor
+  core *= coreMult;
+  // Vermessung
+  const surveyFactor = (surveyYN === 'Ja') ? SURVEY_FACTOR_YES : SURVEY_FACTOR_NO;
+  const work = core * surveyFactor;
+  // Leitungsauskunft additiv
+  const leiCost = (leiYN === 'Ja') ? calcLeiCost(B) : 0;
+  return work + leiCost;
+}
+function calcRoadIntensityScore(ctx){
+  const effKm2 = Math.max(1e-6, ctx.areaEffectiveM2 / 1e6);
+  const r = ctx.roadStats || emptyRoadStats();
+  const perCat = (cat) => {
+    const kmDensity = (r[cat]?.km || 0) / effKm2;
+    const cntDensity = (r[cat]?.count || 0) / effKm2;
+    const weight = ROAD_CATEGORY_WEIGHTS[cat] || 1;
+    return weight * (ROAD_WEIGHT_KM * kmDensity + ROAD_WEIGHT_COUNT * cntDensity);
+  };
+  return perCat('motorways') + perCat('mainroads') + perCat('localroads') + perCat('paths');
+}
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+/* =========================
+   LAGE-HEURISTIK
+========================= */
+function inferLage(ctx){
+  const eff=Math.max(ctx.areaEffectiveM2,1);
+  const buildingShare=ctx.areaBuildingsM2/Math.max(ctx.areaTotalM2,1);
+  const s=ctx.roadAreasM2||{motorways:0, mainroads:0, urbanMain:0, localroads:0, paths:0, total:0};
+  const shareMain=s.mainroads/eff, shareUrban=s.urbanMain/eff, shareLocal=s.localroads/eff;
+  const isUrbanStrong=(shareUrban>0.03)||(buildingShare>0.25&&(shareMain+shareLocal)>0.05);
+  const isLocalDominant=shareLocal>0.06&&shareUrban<0.02;
+  const isRural=buildingShare<0.08&&shareUrban<0.015&&shareMain<0.03;
+  if(isUrbanStrong) return {label:'Hauptstraße (innerstädtisch)', factor:1.3, kind:'urbanMain'};
+  if(isLocalDominant) return {label:'Neben-/Seitenstraße', factor:1.15, kind:'neben'};
+  if(isRural) return {label:'Außerorts', factor:0.6, kind:'ausser'};
+  if(shareMain>0.03) return {label:'Hauptstraße', factor:1.3, kind:'haupt'};
+  return {label:'Neben-/Seitenstraße', factor:1.15, kind:'neben'};
+}
+/* =========================
+   OVERPASS / ANALYSE
+========================= */
+function leafletPolyToTurf(polyLayer){
+  const latlngs=polyLayer.getLatLngs()[0];
+  const coords=latlngs.map(ll=>[ll.lng,ll.lat]);
+  if(coords.length && (coords[0][0]!==coords[coords.length-1][0]||coords[0][1]!==coords[coords.length-1][1])) coords.push(coords[0]);
+  return turf.polygon([coords]);
+}
+async function overpass(query){
+  const url="https://overpass-api.de/api/interpreter";
+  const resp=await fetch(url,{method:'POST', body:query, headers:{'Content-Type':'text/plain;charset=UTF-8'}});
+  if(!resp.ok) throw new Error('Overpass API Fehler: '+resp.status);
+  return resp.json();
+}
+function polyArgFromTurf(turfPoly){ return turfPoly.geometry.coordinates[0].map(c=>`${c[1]} ${c[0]}`).join(' '); }
+async function fetchRoadsForPolygon(turfPoly){
+  const poly=polyArgFromTurf(turfPoly);
+  const query=`[out:json][timeout:35]; way["highway"](poly:"${poly}"); out geom;`;
+  return overpass(query);
+}
+async function fetchAreasForPolygon(turfPoly){
+  const poly=polyArgFromTurf(turfPoly);
+  const query=`[out:json][timeout:60];
+    ( way["building"](poly:"${poly}"); relation["building"]["type"="multipolygon"](poly:"${poly}");
+      way["natural"="water"](poly:"${poly}"); way["waterway"="riverbank"](poly:"${poly}"); way["landuse"="reservoir"](poly:"${poly}");
+      relation["natural"="water"]["type"="multipolygon"](poly:"${poly}"); relation["waterway"="riverbank"]["type"="multipolygon"](poly:"${poly}");
+      relation["landuse"="reservoir"]["type"="multipolygon"](poly:"${poly}"); ); out geom;`;
+  return overpass(query);
+}
+function ringFromGeometry(geom){
+  if(!geom||geom.length<3) return null;
+  const ring=geom.map(p=>[p.lon,p.lat]); const first=ring[0], last=ring[ring.length-1];
+  if(first[0]!==last[0]||first[1]!==last[1]) ring.push([first[0],first[1]]);
+  return ring.length>=4?ring:null;
+}
+function polygonsFromOverpassElement(el){
+  const feats=[];
+  if(el.type==='way'){ const ring=ringFromGeometry(el.geometry); if(ring) feats.push(turf.polygon([ring],{osm_id:el.id})); }
+  else if(el.type==='relation'&&el.members){
+    const outers=[], inners=[];
+    for(const m of el.members){ if(!m.geometry) continue; const ring=ringFromGeometry(m.geometry); if(!ring) continue; if(m.role==='outer') outers.push(ring); else if(m.role==='inner') inners.push(ring); }
+    for(const o of outers) feats.push(turf.polygon([o, ...inners],{osm_id:el.id}));
+  }
+  return feats;
+}
+function lengthInside(lineString, turfPoly){
+  const boundary=turf.polygonToLine(turfPoly); let pieces;
+  try{ pieces=turf.lineSplit(lineString,boundary); } catch{ pieces={type:'FeatureCollection',features:[lineString]}; }
+  let km=0;
+  for(const seg of pieces.features){
+    const len=turf.length(seg,{units:'kilometers'}); if(len===0) continue;
+    const mid=turf.along(seg,len/2,{units:'kilometers'});
+    if(turf.booleanPointInPolygon(mid,turfPoly)) km+=len;
+  }
+  return km;
+}
+/* ---- Highway ableiten & klassifizieren (advanced) ---- */
+// Highway-Typ korrekt ableiten (construction/proposed → Zieltyp)
+function effectiveHighway(tags){
+  let hw = tags.highway;
+  if (hw === 'construction' && tags.construction) hw = tags.construction;
+  if (hw === 'proposed'     && tags.proposed)     hw = tags.proposed;
+  return hw;
+}
+function classify(tags){
+  const hw = effectiveHighway(tags);
+  if(CLASS_MAP.motorways.has(hw)) return 'motorways';
+  if(CLASS_MAP.mainroads.has(hw))  return 'mainroads';
+  if(CLASS_MAP.localroads.has(hw)) return 'localroads';
+  if(CLASS_MAP.paths.has(hw))      return 'paths';
+  return null;
+}
+function emptyRoadStats(){ return {
+  motorways:{count:0,km:0}, mainroads:{count:0,km:0}, localroads:{count:0,km:0}, paths:{count:0,km:0},
+  urbanMain:{km:0}, total:{count:0,km:0}
+}; }
+function emptyRoadAreas(){ return {motorways:0, mainroads:0, localroads:0, paths:0, urbanMain:0, total:0}; }
+function isUrbanMain(highwayTag, buildingShare){
+  const set=new Set(['primary','primary_link','secondary','secondary_link']);
+  return set.has(highwayTag) && buildingShare>=0.15;
+}
+// Analyse
+async function analyzeTurfPolygon(turfPoly){
+  roadsLayer.clearLayers(); fillLayer.clearLayers();
+  last.loading=true; statsControl.render();
+  last.currentTurfPoly = turfPoly; // <— wichtig für Anfrage/KML
+  last.areaTotalM2=turf.area(turfPoly);
+  last.areaBuildingsM2=0; last.areaWaterM2=0; last.areaEffectiveM2=0;
+  last.roadStats=emptyRoadStats(); last.roadAreasM2=emptyRoadAreas();
+  last.inferred={label:'-', factor:1.0, kind:'neben'};
+  try{
+    // Flächen
+    const areasData=await fetchAreasForPolygon(turfPoly);
+    for(const el of (areasData.elements||[])){
+      const kind=(el.tags&&el.tags.building)?'building'
+               :(el.tags&&(el.tags.natural==='water'||el.tags.waterway==='riverbank'||el.tags.landuse==='reservoir'))?'water':null;
+      if(!kind) continue;
+      const polys=polygonsFromOverpassElement(el);
+      for(const p of polys){
+        let inter=null; try{ inter=turf.intersect(p,turfPoly);}catch{}
+        if(!inter) continue;
+        const a=turf.area(inter); if(a<=0) continue;
+        if(kind==='building') last.areaBuildingsM2+=a; else last.areaWaterM2+=a;
+        fillLayer.addData({type:'Feature', geometry:inter.geometry, properties:{kind:kind==='building'?'building':'water'}});
+      }
+    }
+    last.areaEffectiveM2=Math.max(last.areaTotalM2-(last.areaBuildingsM2+last.areaWaterM2),0);
+    const buildingShare=last.areaBuildingsM2/Math.max(last.areaTotalM2,1);
+    // Straßen
+    const roadsData=await fetchRoadsForPolygon(turfPoly);
+    const counted={motorways:new Set(), mainroads:new Set(), localroads:new Set(), paths:new Set()};
+    for(const el of (roadsData.elements||[])){
+      if(el.type!=='way'||!el.tags?.highway||!el.geometry) continue;
+      const coords=el.geometry.map(g=>[g.lon,g.lat]); if(coords.length<2) continue;
+      const effHw = effectiveHighway(el.tags);
+      const line = turf.lineString(coords,{id:el.id, highway:effHw, name:el.tags.name||''});
+      const insideKm = lengthInside(line,turfPoly); if(insideKm<=0) continue;
+      roadsLayer.addData({
+        type:'Feature',
+        geometry:{type:'LineString', coordinates:coords},
+        properties:{id:el.id, highway:effHw, name:el.tags.name||''}
+      });
+      const cls = classify(el.tags); if(!cls) continue;
+      last.roadStats[cls].km+=insideKm;
+      if(!counted[cls].has(el.id)){ counted[cls].add(el.id); last.roadStats[cls].count++; last.roadStats.total.count++; }
+      last.roadStats.total.km+=insideKm;
+      const width = CORRIDOR_WIDTH[effHw] ?? CORRIDOR_WIDTH.default;
+      const areaM2=insideKm*1000*width;
+      last.roadAreasM2[cls]+=areaM2; last.roadAreasM2.total+=areaM2;
+      if(isUrbanMain(effHw,buildingShare)){ last.roadStats.urbanMain.km+=insideKm; last.roadAreasM2.urbanMain+=areaM2; }
+    }
+    for(const k of ['motorways','mainroads','localroads','paths','total']) last.roadStats[k].km=Math.round(last.roadStats[k].km*100)/100;
+    last.inferred=inferLage(last);
+  }catch(err){
+    console.error(err); alert('Fehler bei der Abfrage/Analyse. Details in der Konsole.');
+  }finally{
+    last.loading=false; statsControl.render();
+  }
+}
+async function analyzePolygon(polyLayer){ const turfPoly=leafletPolyToTurf(polyLayer); return analyzeTurfPolygon(turfPoly); }
+map.on(L.Draw.Event.CREATED, e=>{ drawnItems.clearLayers(); drawnItems.addLayer(e.layer); analyzePolygon(e.layer); });
+map.on(L.Draw.Event.EDITED, e=>{ let first; e.layers.eachLayer(l=>{ if(!first) first=l; }); if(first) analyzePolygon(first); });
+map.on(L.Draw.Event.DELETED, ()=>{ roadsLayer.clearLayers(); fillLayer.clearLayers();
+  last.areaTotalM2=0; last.areaBuildingsM2=0; last.areaWaterM2=0; last.areaEffectiveM2=0;
+  last.roadStats=null; last.roadAreasM2=null; last.inferred={label:'-', factor:1.0, kind:'neben'}; last.currentTurfPoly=null; last.loading=false; statsControl.render();
+});
+// Import
+async function handleFiles(fileList){
+  const files=Array.from(fileList);
+  for(const file of files){
+    const name=file.name.toLowerCase();
+    try{
+      if(name.endsWith('.geojson')||name.endsWith('.json')){ const text=await file.text(); addImportedGeoJSON(JSON.parse(text),name); }
+      else if(name.endsWith('.kml')||name.endsWith('.gpx')){ const text=await file.text(); const xml=new DOMParser().parseFromString(text,'text/xml'); const gj=name.endsWith('.kml')?toGeoJSON.kml(xml):toGeoJSON.gpx(xml); addImportedGeoJSON(gj,name); }
+      else if(name.endsWith('.zip')){ const arrayBuf=await file.arrayBuffer(); const gj=await shp(arrayBuf); addImportedGeoJSON(gj,name); }
+      else if(name.endsWith('.dxf')){ const text=await file.text(); const parser=new DxfParser(); const dxf=parser.parseSync(text); const gj=dxfToGeoJSON(dxf); addImportedGeoJSON(gj,name); }
+      else { alert('Nicht unterstützter Dateityp: '+file.name); }
+    }catch(e){ console.error('Import-Fehler',file.name,e); alert('Fehler beim Import von '+file.name+' (Details in Konsole).'); }
+  }
+}
+const importedLayer=L.geoJSON(null,{style:f=>({color:'#0ea5e9',weight:2,fillOpacity:0.2})}).addTo(map);
+function addImportedGeoJSON(gj,name='import'){
+  const fc=normalizeToFeatureCollection(gj); if(!fc.features.length){ alert('Keine Features in '+name+' gefunden.'); return; }
+  importedLayer.clearLayers(); importedLayer.addData(fc);
+  try{ map.fitBounds(importedLayer.getBounds(),{maxZoom:16}); }catch{}
+  const polys=fc.features.filter(f=>['Polygon','MultiPolygon'].includes(f.geometry?.type));
+  if(polys.length){
+    let biggest=polys[0], maxA=0;
+    polys.forEach(f=>{ try{ const a=turf.area(f); if(a>maxA){maxA=a; biggest=f;} }catch{} });
+    analyzeTurfPolygon(turf.feature(biggest.geometry));
+  }
+}
+function normalizeToFeatureCollection(geojson){
+  if(!geojson) return {type:'FeatureCollection',features:[]};
+  if(geojson.type==='FeatureCollection') return geojson;
+  if(geojson.type==='Feature') return {type:'FeatureCollection',features:[geojson]};
+  if(geojson.type&&geojson.geometry) return {type:'FeatureCollection',features:[geojson]};
+  if(Array.isArray(geojson)){ const feats=[]; geojson.forEach(g=>{ const fc=normalizeToFeatureCollection(g); feats.push(...fc.features); }); return {type:'FeatureCollection',features:feats}; }
+  return {type:'FeatureCollection',features:[]};
+}
+function dxfToGeoJSON(dxf){
+  const feats=[], ents=dxf.entities||[], pushLine=(coords)=>{ if(coords.length<2) return; feats.push(turf.lineString(coords.map(c=>[c.x,c.y]))); };
+  ents.forEach(ent=>{
+    if(ent.type==='LINE'){ pushLine([{x:ent.start.x,y:ent.start.y},{x:ent.end.x,y:ent.end.y}]); }
+    else if(ent.type==='LWPOLYLINE'||ent.type==='POLYLINE'){ const pts=(ent.vertices||ent.points||[]).map(v=>({x:v.x,y:v.y})); if(pts.length>=2) pushLine(pts); }
+  });
+  return turf.featureCollection(feats);
+}
+/* =========================
+   INQUIRY MODAL (Kontakt)
+========================= */
+function ensureInquiryModal(){
+  if(document.getElementById('inquiryModalBackdrop')) return;
+  const backdrop=document.createElement('div');
+  backdrop.className='modal-backdrop'; backdrop.id='inquiryModalBackdrop';
+  backdrop.innerHTML=`
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="inqTitle">
+      <h3 id="inqTitle">Anfrage senden</h3>
+      <div class="grid">
+        <div class="full">
+          <label>Projektname *</label>
+          <input id="inqProject" type="text" placeholder="z.B. A661-Trasse Abschnitt Nord">
+          <div id="errProject" class="error">Bitte Projektname angeben.</div>
+        </div>
+        <div>
+          <label>Firma</label>
+          <input id="inqCompany" type="text" placeholder="optional">
+        </div>
+        <div>
+          <label>Ihr Name *</label>
+          <input id="inqName" type="text" placeholder="Vor- und Nachname">
+          <div id="errName" class="error">Bitte Namen angeben.</div>
+        </div>
+        <div>
+          <label>E-Mail *</label>
+          <input id="inqEmail" type="email" placeholder="you@example.com">
+          <div id="errEmail" class="error">Bitte gültige E-Mail angeben.</div>
+        </div>
+        <div>
+          <label>Telefon</label>
+          <input id="inqPhone" type="tel" placeholder="optional">
+        </div>
+        <div class="full">
+          <label>Nachricht</label>
+          <textarea id="inqMsg" placeholder="Hinweise, Besonderheiten…"></textarea>
+        </div>
+        <div class="full consent-row">
+          <input id="inqConsent" type="checkbox">
+          <label for="inqConsent">Ich stimme zu, dass meine Daten zur Bearbeitung der Anfrage gemäß Datenschutz verarbeitet werden. *</label>
+        </div>
+        <div id="errConsent" class="error full">Bitte den Datenschutz bestätigen.</div>
+      </div>
+      <div class="actions">
+        <button id="inqCancel" class="btn-secondary" type="button">Abbrechen</button>
+        <button id="inqSend" class="btn-primary" type="button">Jetzt senden</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  // Close handlers
+  document.getElementById('inqCancel').addEventListener('click', closeInquiryModal);
+  backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) closeInquiryModal(); });
+  document.getElementById('inqSend').addEventListener('click', submitInquiry);
+}
+function openInquiryModal(){
+  const b=document.getElementById('inquiryModalBackdrop');
+  if(!b){ ensureInquiryModal(); }
+  document.getElementById('inquiryModalBackdrop').style.display='flex';
+}
+function closeInquiryModal(){
+  const b=document.getElementById('inquiryModalBackdrop');
+  if(b) b.style.display='none';
+}
+function validateEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||'').trim()); }
+async function submitInquiry(){
+  const btn=document.getElementById('inqSend');
+  const project=document.getElementById('inqProject').value.trim();
+  const company=document.getElementById('inqCompany').value.trim();
+  const name=document.getElementById('inqName').value.trim();
+  const email=document.getElementById('inqEmail').value.trim();
+  const phone=document.getElementById('inqPhone').value.trim();
+  const msg=document.getElementById('inqMsg').value.trim();
+  const consent=document.getElementById('inqConsent').checked;
+  // simple validation
+  let ok=true;
+  const show=(id,cond)=>{ document.getElementById(id).style.display = cond ? 'block' : 'none'; if(cond) ok=false; };
+  show('errProject', project==='');
+  show('errName', name==='');
+  show('errEmail', !validateEmail(email));
+  show('errConsent', !consent);
+  if(!ok) return;
+  try{
+    btn.disabled=true; btn.textContent='Sende …';
+    const ctx=last;
+    const price=calcPriceAuto(ctx.areaEffectiveM2, ctx.inferred, ctx.vermessung, ctx.leiauskunft);
+    const poly = ctx.currentTurfPoly || null;
+    const nowIso = new Date().toISOString();
+    let kmlInline = null;
+    if(poly){ kmlInline = turfPolygonToKML(poly, project || `Projekt ${nowIso}`); }
+    const payload = {
+      _email: {
+        subject: `Neue Preis-Anfrage: ${project || 'ohne Projektnamen'}`
+      },
+      Erstellt_am: nowIso,
+      Firma: company,
+      Projekt: project,
+      Name: name,
+      E_Mail: email,
+      Telefon: phone,
+      Nachricht: msg,
+      consent: consent ? 'ja' : 'nein',
+      Vermessung: ctx.vermessung,
+      Leitungsauskunft: ctx.leiauskunft,
+      lage: ctx.inferred?.label || '-',
+      Gesamtfläche: Math.round(ctx.areaTotalM2),
+      Gebäudefläche: Math.round(ctx.areaBuildingsM2),
+      Wasserfläche: Math.round(ctx.areaWaterM2),
+      Effektivefläche: Math.round(ctx.areaEffectiveM2),
+      motorways_km: ctx.roadStats.motorways.km,
+      motorways_count: ctx.roadStats.motorways.count,
+      mainroads_km: ctx.roadStats.mainroads.km,
+      mainroads_count: ctx.roadStats.mainroads.count,
+      localroads_km: ctx.roadStats.localroads.km,
+      localroads_count: ctx.roadStats.localroads.count,
+      paths_km: ctx.roadStats.paths.km,
+      paths_count: ctx.roadStats.paths.count,
+      total_km: ctx.roadStats.total.km,
+      total_count: ctx.roadStats.total.count,
+      gesamt_eur: Math.round(price),
+      kml_inline: kmlInline
+    };
+    await postToFormspark(payload);
+    btn.textContent='Gesendet ✓';
+    setTimeout(()=>{ closeInquiryModal(); btn.disabled=false; btn.textContent='Jetzt senden'; }, 800);
+  }catch(err){
+    console.error(err);
+    alert('Senden fehlgeschlagen. Details in der Konsole.');
+    btn.disabled=false; btn.textContent='Jetzt senden';
+  }
+}
+</script>
+</body>
+</html>

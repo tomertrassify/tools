@@ -1,0 +1,38 @@
+[
+  {
+    "slug": "email template",
+    "name": "EML JSON Converter",
+    "description": "Fuellt eine EML-Vorlage aus einer JSON-Datei und laedt die fertige .eml direkt herunter.",
+    "category": "E-Mail",
+    "icon": "E",
+    "path": "./tools/email template/",
+    "order": 1
+  },
+  {
+    "slug": "max-wild-webmap-kml",
+    "name": "KML Projektpaket Generator",
+    "description": "Erstellt aus einer KML-Datei ein Projektpaket als ZIP und hilft beim Aktualisieren der _projects.json.",
+    "category": "Datenaufbereitung",
+    "icon": "K",
+    "path": "./tools/max-wild-webmap-kml/",
+    "order": 2
+  },
+  {
+    "slug": "dxf-viewer",
+    "name": "DXF Viewer",
+    "description": "Oeffnet DXF- und DWG-Dateien im Browser, filtert nach Layern und Objekttypen und exportiert sichtbare Inhalte als GeoJSON.",
+    "category": "CAD",
+    "icon": "D",
+    "path": "./tools/dxf-viewer/",
+    "order": 3
+  },
+  {
+    "slug": "Pricefy",
+    "name": "Pricefy Preisrechner",
+    "description": "Pricefy ist ein Preisrechner für die schnelle Kalkulation von Projekten und Leistungen.",
+    "category": "Allgemein",
+    "icon": "P",
+    "path": "./tools/Pricefy/",
+    "order": 999
+  }
+]

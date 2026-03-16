@@ -1,0 +1,126 @@
+{
+  "_meta": {
+    "description": "Preis-Konfiguration fuer den Bohrpunktrechner.",
+    "version": 3
+  },
+  "_readme": [
+    "Jede Variante entspricht einer Spalte aus der Preisliste.",
+    "Reihenfolge hier: 1. Trassify Standard, 2. Nur Digitalisierung, 3. Nur Leitungsauskunft.",
+    "Es gilt immer die hoechste passende Staffel: minimumPoints <= sichtbare Bohrpunkte.",
+    "Die Preisberechnung erfolgt clusterweise.",
+    "Der Clustermodus kann testweise von Distanz auf Gemeinde umgestellt werden.",
+    "Gemeinden werden dabei direkt aus OSM ueber administrative Grenzen gelesen.",
+    "Fuer Geschwindigkeit werden keine Gemeindeflaechen angezeigt, sondern nur Punkt-zu-Gemeinde-Zuordnungen berechnet."
+  ],
+  "bohrpunktCalculator": {
+    "_comment": "Die Preise aus dem Screenshot wurden auf die fachlichen Varianten umgelegt: Spalte 1 = Nur Leitungsauskunft, Spalte 2 = Nur Digitalisierung, Spalte 3 = Trassify Standard.",
+    "clustering": {
+      "mode": "municipality",
+      "distanceMeters": 1000,
+      "municipalityResolver": {
+        "_comment": "Gemeinden werden ueber OSM-/Overpass-Grenzen mit admin_level 8 und Fallback 7 aufgeloest. Die Abfragen laufen parallel pro Punktgruppe, nicht ueber Gemeindeflaechen.",
+        "adminLevels": [8, 7],
+        "maxConcurrentRequests": 6,
+        "requestTimeoutMs": 12000,
+        "requestDelayMs": 0
+      }
+    },
+    "variants": [
+      {
+        "key": "standard",
+        "label": "Trassify Standard"
+      },
+      {
+        "key": "digitization",
+        "label": "Nur Digitalisierung"
+      },
+      {
+        "key": "lineInquiry",
+        "label": "Nur Leitungsauskunft"
+      }
+    ],
+    "tiers": [
+      {
+        "minimumPoints": 1,
+        "label": "ab 1 Bohrpunkt",
+        "unitPrices": {
+          "standard": 275,
+          "digitization": 183,
+          "lineInquiry": 92
+        }
+      },
+      {
+        "minimumPoints": 6,
+        "label": "ab 6 Bohrpunkten",
+        "unitPrices": {
+          "standard": 250,
+          "digitization": 167,
+          "lineInquiry": 83
+        }
+      },
+      {
+        "minimumPoints": 10,
+        "label": "ab 10 Bohrpunkten",
+        "unitPrices": {
+          "standard": 225,
+          "digitization": 150,
+          "lineInquiry": 75
+        }
+      },
+      {
+        "minimumPoints": 20,
+        "label": "ab 20 Bohrpunkten",
+        "unitPrices": {
+          "standard": 200,
+          "digitization": 133,
+          "lineInquiry": 67
+        }
+      },
+      {
+        "minimumPoints": 40,
+        "label": "ab 40 Bohrpunkten",
+        "unitPrices": {
+          "standard": 150,
+          "digitization": 100,
+          "lineInquiry": 50
+        }
+      },
+      {
+        "minimumPoints": 60,
+        "label": "ab 60 Bohrpunkten",
+        "unitPrices": {
+          "standard": 125,
+          "digitization": 83,
+          "lineInquiry": 42
+        }
+      },
+      {
+        "minimumPoints": 80,
+        "label": "ab 80 Bohrpunkten",
+        "unitPrices": {
+          "standard": 100,
+          "digitization": 67,
+          "lineInquiry": 33
+        }
+      },
+      {
+        "minimumPoints": 100,
+        "label": "ab 100 Bohrpunkten",
+        "unitPrices": {
+          "standard": 80,
+          "digitization": 53,
+          "lineInquiry": 27
+        }
+      },
+      {
+        "minimumPoints": 150,
+        "label": "ab 150 Bohrpunkten",
+        "unitPrices": {
+          "standard": 75,
+          "digitization": 50,
+          "lineInquiry": 25
+        }
+      }
+    ]
+  }
+}

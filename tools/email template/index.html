@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EML JSON Converter | Trassify Toolbox</title>
+    <meta
+      name="description"
+      content="JSON hochladen, EML-Vorlage automatisch fuellen und direkt als EML herunterladen."
+    />
+    <link
+      rel="icon"
+      href="../../assets/theme/images/favicon.png"
+      type="image/png"
+    />
+    <link rel="stylesheet" href="../../assets/theme/trassify-theme.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="trassify-theme-body tool-page tool-page--email">
+    <div class="trassify-page">
+      <div class="trassify-page-lines" aria-hidden="true">
+        <div class="trassify-page-lines__outer">
+          <div class="trassify-page-lines__inner"></div>
+        </div>
+      </div>
+
+      <main class="trassify-shell">
+        <header class="trassify-topbar">
+          <a class="trassify-brand" href="../../">
+            <img
+              class="trassify-brand-mark"
+              src="../../assets/theme/images/brand-mark.svg"
+              alt="Trassify"
+            />
+            <span class="trassify-brand-caption">EML Tool</span>
+          </a>
+
+          <div class="trassify-topbar-actions">
+            <a class="trassify-pill" href="../../#tool-grid">Zur Toolbox</a>
+          </div>
+        </header>
+
+        <section class="tool-intro">
+          <div class="tool-intro-copy">
+            <p class="trassify-eyebrow trassify-eyebrow--dark">Plananfrage Tool</p>
+            <h1 class="trassify-heading tool-intro-title">JSON zu ausgefuellter EML</h1>
+            <p class="trassify-copy">
+              JSON hochladen, Vorlage automatisch fuellen und die fertige
+              <code>.eml</code> direkt herunterladen.
+            </p>
+          </div>
+
+          <div class="tool-intro-chips">
+            <span class="tool-intro-chip">Datei reinziehen</span>
+            <span class="tool-intro-chip">Vorlage fuellen</span>
+            <span class="tool-intro-chip">EML laden</span>
+          </div>
+        </section>
+
+        <section class="trassify-workspace">
+          <section class="trassify-card tool-upload-card">
+            <div class="trassify-panel-heading">
+              <p class="trassify-eyebrow trassify-eyebrow--dark">Upload</p>
+              <h2 class="trassify-heading">JSON hochladen und EML erzeugen</h2>
+              <p class="trassify-copy">
+                Das Tool verarbeitet die Datei direkt im Browser und startet den
+                Download automatisch.
+              </p>
+            </div>
+
+            <input
+              id="jsonFile"
+              class="visually-hidden"
+              type="file"
+              accept="application/json,.json"
+            />
+            <label
+              id="dropzone"
+              for="jsonFile"
+              class="dropzone"
+              tabindex="0"
+              role="button"
+              aria-label="JSON-Datei hochladen"
+            >
+              <span class="upload-icon" aria-hidden="true">
+                <svg
+                  width="54"
+                  height="54"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8.5 18H6.5C4.29086 18 2.5 16.2091 2.5 14C2.5 11.7909 4.29086 10 6.5 10C6.85113 10 7.19168 10.0452 7.51613 10.13C8.33835 7.75298 10.5941 6 13.25 6C16.6042 6 19.3643 8.80853 19.4989 12.1595C20.6913 12.5832 21.5 13.7206 21.5 15C21.5 16.6569 20.1569 18 18.5 18H15.5"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M12 11.5V21"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M8.5 15L12 11.5L15.5 15"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <span class="drop-title">JSON hier reinziehen oder klicken</span>
+              <span class="drop-copy">
+                Die Datei wird sofort verarbeitet und die EML direkt
+                heruntergeladen.
+              </span>
+            </label>
+
+            <div class="actions">
+              <button id="downloadBtn" class="trassify-button" type="button" disabled>
+                <span>EML erneut herunterladen</span>
+              </button>
+            </div>
+
+            <p id="status" class="trassify-status status" aria-live="polite"></p>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

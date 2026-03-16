@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <base href="../" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trassify Plan A3 hoch - Vorschau</title>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="plan-vorlagen/plan-template-pdf-renderer.js?v=15"></script>
+    <script src="plan-vorlagen/trassify-plan-a3-hoch.js?v=30"></script>
+    <style>
+      @font-face {
+        font-family: "Scandia";
+        src: url("assets/fonts/scandia.otf") format("opentype");
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Scandia";
+        src: url("assets/fonts/scandia-light.otf") format("opentype");
+        font-style: normal;
+        font-weight: 300;
+        font-display: swap;
+      }
+
+      :root {
+        color-scheme: light;
+        --bg: #eef1e9;
+        --panel: rgba(255, 255, 255, 0.92);
+        --panel-border: rgba(143, 174, 139, 0.28);
+        --text: #1d1d1b;
+        --muted: #5f655c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Scandia", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(166, 196, 161, 0.35), transparent 30%),
+          linear-gradient(180deg, #f7f9f4 0%, var(--bg) 100%);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        padding: 24px 20px;
+        border-right: 1px solid var(--panel-border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 249, 244, 0.9));
+      }
+
+      .sidebar h1 {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1;
+      }
+
+      .sidebar p {
+        margin: 10px 0 0;
+        font-size: 14px;
+        line-height: 1.4;
+        color: var(--muted);
+      }
+
+      .meta {
+        margin-top: 16px;
+        padding: 12px;
+        border: 1px solid var(--panel-border);
+        border-radius: 14px;
+        background: var(--panel);
+        font-size: 12px;
+      }
+
+      form {
+        margin-top: 16px;
+        display: grid;
+        gap: 10px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        border: 1px solid rgba(29, 29, 27, 0.16);
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--text);
+        font: inherit;
+        font-size: 14px;
+        padding: 8px 10px;
+        outline: none;
+      }
+
+      textarea {
+        min-height: 82px;
+        resize: vertical;
+      }
+
+      input:focus,
+      textarea:focus {
+        border-color: rgba(143, 174, 139, 0.95);
+        box-shadow: 0 0 0 4px rgba(166, 196, 161, 0.22);
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .toggle input {
+        width: 14px;
+        height: 14px;
+        accent-color: #8fae8b;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .primary {
+        color: #fff;
+        background: linear-gradient(135deg, #a6c4a1, #8fae8b);
+      }
+
+      .secondary {
+        color: var(--text);
+        background: rgba(29, 29, 27, 0.08);
+      }
+
+      .stage {
+        min-width: 0;
+        padding: 18px;
+        overflow: auto;
+      }
+
+      .stage-shell {
+        width: min(100%, 1560px);
+        display: grid;
+        gap: 10px;
+      }
+
+      .status-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--panel-border);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.86);
+      }
+
+      #status {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      #status.is-error {
+        color: #b74141;
+      }
+
+      #open-link {
+        color: var(--text);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      #open-link:hover {
+        text-decoration: underline;
+      }
+
+      .canvas-wrap {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      canvas {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 20px 60px rgba(34, 41, 33, 0.2);
+      }
+
+      @media (max-width: 1100px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h1>A3 hoch</h1>
+        <p>
+          Exportidentische PDF-Vorschau fuer das native Hochformat-Template.
+        </p>
+        <div class="meta">
+          <strong>Aktive Vorlage:</strong>
+          <div><code>plan-vorlagen/trassify-plan-a3-hoch.js</code></div>
+        </div>
+
+        <form id="form">
+          <label>
+            Projektname
+            <input name="projektname" type="text" value="Musterprojekt Nord" />
+          </label>
+          <label>
+            Kunde
+            <input name="kunde" type="text" value="Max Wild GmbH" />
+          </label>
+          <label>
+            Kostenstelle
+            <input name="kst" type="text" value="253112" />
+          </label>
+          <label>
+            Auftraggeber
+            <input name="auftraggeber" type="text" value="Gottlob Brodbeck GmbH" />
+          </label>
+          <label>
+            Bauleitung
+            <input name="bauleitung" type="text" value="Robin Reichl" />
+          </label>
+          <label>
+            Kontakt Bauleitung
+            <input name="kontaktBauleitung" type="text" value="0151 14036666" />
+          </label>
+          <label>
+            Baubeginn
+            <input name="baubeginn" type="text" value="15.01.2026" />
+          </label>
+          <label>
+            Bauende
+            <input name="bauende" type="text" value="24.03.2026" />
+          </label>
+          <label>
+            Exportdatum
+            <input name="datum" type="text" value="05.03.2026" />
+          </label>
+          <label>
+            Massstab
+            <input name="scaleLabel" type="text" value="1:1000" />
+          </label>
+          <label>
+            Projektbeschreibung
+            <textarea name="beschreibung">HDD-Bohrung(en) und Leitungsquerung im noerdlichen Abschnitt.</textarea>
+          </label>
+          <label class="toggle">
+            <input id="debug" type="checkbox" />
+            Debug-Boxen anzeigen
+          </label>
+          <div class="actions">
+            <button type="submit" class="primary">Aktualisieren</button>
+            <button type="button" id="reset" class="secondary">Zuruecksetzen</button>
+          </div>
+        </form>
+      </aside>
+
+      <main class="stage">
+        <div class="stage-shell">
+          <div class="status-row">
+            <div id="status">PDF-Vorschau wird aufgebaut.</div>
+            <a id="open-link" href="#" target="_blank" rel="noopener" hidden>PDF in neuem Tab</a>
+          </div>
+          <div class="canvas-wrap" id="canvas-wrap">
+            <canvas id="canvas" aria-label="PDF-Vorschau"></canvas>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      (function initPreview() {
+        const template = window.projectPlanTemplateRegistry?.["trassify-plan-a3-hoch"];
+        const renderer = window.planTemplatePdfRenderer;
+        const form = document.getElementById("form");
+        const resetBtn = document.getElementById("reset");
+        const debugToggle = document.getElementById("debug");
+        const statusNode = document.getElementById("status");
+        const openLink = document.getElementById("open-link");
+        const canvas = document.getElementById("canvas");
+        const canvasWrap = document.getElementById("canvas-wrap");
+        if (!template || !renderer || !form || !statusNode || !openLink || !canvas || !canvasWrap) return;
+        if (!window.pdfjsLib) return;
+
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+
+        const defaults = {
+          projektname: "Musterprojekt Nord",
+          kunde: "Max Wild GmbH",
+          kst: "253112",
+          auftraggeber: "Gottlob Brodbeck GmbH",
+          bauleitung: "Robin Reichl",
+          kontaktBauleitung: "0151 14036666",
+          baubeginn: "15.01.2026",
+          bauende: "24.03.2026",
+          datum: "05.03.2026",
+          scaleLabel: "1:1000",
+          beschreibung: "HDD-Bohrung(en) und Leitungsquerung im noerdlichen Abschnitt."
+        };
+
+        let scheduledRenderId = 0;
+        let currentPdfUrl = "";
+        let renderToken = 0;
+        let currentPdfDocument = null;
+        let definitionPromise = null;
+
+        function setStatus(message, isError) {
+          statusNode.textContent = String(message || "");
+          statusNode.classList.toggle("is-error", !!isError);
+        }
+
+        function parseQptPairMm(value, keys) {
+          const parts = String(value || "")
+            .split(",")
+            .map(part => Number.parseFloat(part.trim()))
+            .filter(Number.isFinite);
+          if (!Number.isFinite(parts[0]) || !Number.isFinite(parts[1])) return null;
+          return { [keys[0]]: parts[0], [keys[1]]: parts[1] };
+        }
+
+        function parseQptColorValue(colorValue, fallback) {
+          const match = String(colorValue || "").match(
+            /^\s*([0-9]+)\s*,\s*([0-9]+)\s*,\s*([0-9]+)/
+          );
+          if (!match) return fallback;
+          const clamp = value => Math.max(0, Math.min(255, Number.parseInt(value, 10) || 0));
+          return [clamp(match[1]), clamp(match[2]), clamp(match[3])];
+        }
+
+        function parseQptColorElement(element, fallback) {
+          if (!element) return fallback;
+          const red = Number.parseInt(element.getAttribute("red") || "", 10);
+          const green = Number.parseInt(element.getAttribute("green") || "", 10);
+          const blue = Number.parseInt(element.getAttribute("blue") || "", 10);
+          if (![red, green, blue].every(Number.isFinite)) return fallback;
+          return [red, green, blue];
+        }
+
+        function normalizeQptTemplateText(value) {
+          return String(value || "").replace(/\r\n?/g, "\n");
+        }
+
+        function resolveQptHorizontalAlign(rawValue) {
+          const value = Number.parseInt(rawValue, 10);
+          if (value === 2) return "right";
+          if (value === 4) return "center";
+          return "left";
+        }
+
+        function resolveQptVerticalAlign(rawValue) {
+          const value = Number.parseInt(rawValue, 10);
+          if (value === 64) return "bottom";
+          if (value === 128) return "middle";
+          return "top";
+        }
+
+        function normalizeQptInlineImageSource(fileValue) {
+          const raw = String(fileValue || "").trim();
+          if (!raw) return "";
+          if (/^data:/i.test(raw) || /^https?:/i.test(raw) || raw.startsWith("/") || raw.startsWith(".")) {
+            return raw;
+          }
+          if (/^base64:/i.test(raw)) {
+            return `data:image/svg+xml;base64,${raw.slice(7)}`;
+          }
+          return raw;
+        }
+
+        function getXmlElementsByTagName(root, tagName) {
+          if (!root || typeof root.getElementsByTagName !== "function") return [];
+          return Array.from(root.getElementsByTagName(tagName) || []);
+        }
+
+        function getFirstXmlElementByTagName(root, tagName) {
+          return getXmlElementsByTagName(root, tagName)[0] || null;
+        }
+
+        function findXmlOptionValue(root, optionName) {
+          const options = getXmlElementsByTagName(root, "Option");
+          for (const optionEl of options) {
+            if (String(optionEl.getAttribute("name") || "").trim() !== String(optionName || "").trim()) {
+              continue;
+            }
+            return String(optionEl.getAttribute("value") || "").trim();
+          }
+          return "";
+        }
+
+        function parsePlanTemplateQptDefinition(qptTextRaw) {
+          const text = String(qptTextRaw || "").trim();
+          if (!text) return null;
+          try {
+            const parser = new DOMParser();
+            const qptDoc = parser.parseFromString(text, "application/xml");
+            if (getXmlElementsByTagName(qptDoc, "parsererror").length) return null;
+            const layoutItems = getXmlElementsByTagName(qptDoc, "LayoutItem");
+            if (!layoutItems.length) return null;
+            const pageItem = layoutItems.find(item => item.getAttribute("type") === "65638") || null;
+            const mapItem = layoutItems.find(item => item.getAttribute("type") === "65639") || null;
+            const pageSize =
+              parseQptPairMm(pageItem?.getAttribute("size"), ["width", "height"]) ||
+              parseQptPairMm(mapItem?.getAttribute("size"), ["width", "height"]) || {
+                width: 297,
+                height: 420
+              };
+            const mapPosition = parseQptPairMm(
+              mapItem?.getAttribute("positionOnPage") || mapItem?.getAttribute("position"),
+              ["x", "y"]
+            );
+            const mapSize = parseQptPairMm(mapItem?.getAttribute("size"), ["width", "height"]);
+            const mapFrame =
+              mapPosition && mapSize ? { ...mapPosition, ...mapSize } : { x: 5, y: 5, width: 287, height: 330 };
+            const items = [];
+
+            layoutItems.forEach(item => {
+              const type = String(item.getAttribute("type") || "");
+              const isVisible = String(item.getAttribute("visibility") || "1") !== "0";
+              if (!isVisible || item === pageItem || item === mapItem) return;
+              const position = parseQptPairMm(
+                item.getAttribute("positionOnPage") || item.getAttribute("position"),
+                ["x", "y"]
+              );
+              const size = parseQptPairMm(item.getAttribute("size"), ["width", "height"]);
+              if (!position || !size) return;
+              const zIndex = Number.parseFloat(item.getAttribute("zValue") || "0") || 0;
+
+              if (type === "65641") {
+                const styleEl = getFirstXmlElementByTagName(item, "text-style");
+                const fontSizePt = Number.parseFloat(styleEl?.getAttribute("fontSize") || "8.5");
+                const fontWeight = Number.parseInt(styleEl?.getAttribute("fontWeight") || "50", 10);
+                const namedStyle = String(styleEl?.getAttribute("namedStyle") || "");
+                const lineHeightFactor = Number.parseFloat(
+                  styleEl?.getAttribute("multilineHeight") || "1.15"
+                );
+                const capitalization = Number.parseInt(
+                  styleEl?.getAttribute("capitalization") || "0",
+                  10
+                );
+                items.push({
+                  kind: "text",
+                  zIndex,
+                  position,
+                  size,
+                  templateText: normalizeQptTemplateText(item.getAttribute("labelText")),
+                  fontSizePt: Number.isFinite(fontSizePt) && fontSizePt > 0 ? fontSizePt : 8.5,
+                  fontStyle:
+                    /bold|medium/i.test(namedStyle) || fontWeight >= 57 ? "bold" : "normal",
+                  color: parseQptColorValue(styleEl?.getAttribute("textColor"), [0, 0, 0]),
+                  lineHeightFactor:
+                    Number.isFinite(lineHeightFactor) && lineHeightFactor > 0
+                      ? lineHeightFactor
+                      : 1.15,
+                  capitalization,
+                  hAlign: resolveQptHorizontalAlign(item.getAttribute("halign")),
+                  vAlign: resolveQptVerticalAlign(item.getAttribute("valign"))
+                });
+                return;
+              }
+
+              if (type === "65643") {
+                items.push({
+                  kind: "shape",
+                  zIndex,
+                  position,
+                  size,
+                  fillColor: parseQptColorValue(findXmlOptionValue(item, "color"), [47, 47, 47])
+                });
+                return;
+              }
+
+              if (type === "65640") {
+                const source = normalizeQptInlineImageSource(item.getAttribute("file"));
+                if (!source) return;
+                items.push({
+                  kind: "picture",
+                  zIndex,
+                  position,
+                  size,
+                  source
+                });
+                return;
+              }
+
+              if (type === "65646") {
+                const styleEl = getFirstXmlElementByTagName(item, "text-style");
+                const fillPrimaryEl = getFirstXmlElementByTagName(item, "fillColor");
+                const fillSecondaryEl = getFirstXmlElementByTagName(item, "fillColor2");
+                const strokeColorEl = getFirstXmlElementByTagName(item, "strokeColor");
+                const scaleFontSizePt = Number.parseFloat(styleEl?.getAttribute("fontSize") || "7");
+                const segmentsRaw = Number.parseInt(item.getAttribute("numSegments") || "2", 10);
+                const barHeightMm = Number.parseFloat(
+                  item.getAttribute("height") || item.getAttribute("subdivisionsHeight") || "1.5"
+                );
+                const maxBarWidthMm = Number.parseFloat(item.getAttribute("maxBarWidth") || "50");
+                items.push({
+                  kind: "scaleBar",
+                  zIndex,
+                  position,
+                  size,
+                  maxBarWidthMm:
+                    Number.isFinite(maxBarWidthMm) && maxBarWidthMm > 0
+                      ? maxBarWidthMm
+                      : Math.max(20, Number(size.width) || 50),
+                  barHeightMm: Number.isFinite(barHeightMm) && barHeightMm > 0 ? barHeightMm : 1.5,
+                  segments: Number.isFinite(segmentsRaw) && segmentsRaw >= 2 ? segmentsRaw : 2,
+                  labelColor: parseQptColorValue(styleEl?.getAttribute("textColor"), [29, 29, 27]),
+                  darkColor: parseQptColorElement(fillPrimaryEl, [29, 29, 27]),
+                  lightColor: parseQptColorElement(fillSecondaryEl, [255, 255, 255]),
+                  strokeColor: parseQptColorElement(strokeColorEl, [29, 29, 27]),
+                  scaleFontSizePt:
+                    Number.isFinite(scaleFontSizePt) && scaleFontSizePt > 0 ? scaleFontSizePt : 7,
+                  distanceFontSizePt:
+                    Number.isFinite(scaleFontSizePt) && scaleFontSizePt > 0
+                      ? Math.max(5.4, scaleFontSizePt - 0.6)
+                      : 6.4
+                });
+              }
+            });
+
+            items.sort((left, right) => left.zIndex - right.zIndex);
+            return { pageSize, mapFrame, items };
+          } catch (_error) {
+            return null;
+          }
+        }
+
+        async function loadTemplateDefinition() {
+          if (definitionPromise) return definitionPromise;
+          definitionPromise = (async () => {
+            if (template.definition && typeof template.definition === "object") {
+              return JSON.parse(JSON.stringify(template.definition));
+            }
+            return null;
+          })();
+          return definitionPromise;
+        }
+
+        function collectMeta() {
+          const data = new FormData(form);
+          return Object.fromEntries(data.entries());
+        }
+
+        function deriveLocationLabel(meta) {
+          const address = String(meta?.strassenadresse || "").trim();
+          if (!address) return String(meta?.projektname || "").trim() || "-";
+          const parts = address
+            .split(",")
+            .map(part => part.trim())
+            .filter(Boolean);
+          return parts[parts.length - 1] || address;
+        }
+
+        function buildReferenceId(seedText) {
+          const seed = String(seedText || "").trim();
+          if (!seed) return "ID: 000000";
+          let hash = 0;
+          for (let idx = 0; idx < seed.length; idx += 1) {
+            hash = (hash * 31 + seed.charCodeAt(idx)) % 1000000;
+          }
+          return `ID: ${String(hash).padStart(6, "0")}`;
+        }
+
+        function resolveText(item, meta, scaleDenominator) {
+          const raw = String(item?.templateText ?? item?.text ?? "");
+          if (typeof template.resolveText !== "function") return raw;
+          const resolved = template.resolveText({
+            templateText: raw,
+            meta,
+            baseName: meta.projektname || "Projektgebiet",
+            helpers: {
+              normalizeText: value => String(value || "").replace(/\r\n?/g, "\n"),
+              getBasemapLicenseText: () => "© OpenStreetMap contributors · © MapTiler · ALKIS",
+              buildReferenceId,
+              deriveLocationLabel,
+              getScaleLabel: () => renderer.getScaleLabel(scaleDenominator),
+              getScaleDenominator: () => scaleDenominator
+            }
+          });
+          return resolved == null ? raw : String(resolved);
+        }
+
+        async function renderPdfPage(pdfBlob, token) {
+          const bytes = await pdfBlob.arrayBuffer();
+          if (token !== renderToken) return;
+          const loadingTask = window.pdfjsLib.getDocument({ data: bytes });
+          const pdfDocument = await loadingTask.promise;
+          if (token !== renderToken) {
+            await pdfDocument.destroy();
+            return;
+          }
+          if (currentPdfDocument && typeof currentPdfDocument.destroy === "function") {
+            try {
+              await currentPdfDocument.destroy();
+            } catch (_error) {
+              /* noop */
+            }
+          }
+          currentPdfDocument = pdfDocument;
+          const page = await pdfDocument.getPage(1);
+          if (token !== renderToken) return;
+          const baseViewport = page.getViewport({ scale: 1 });
+          const availableWidth = Math.max(360, canvasWrap.clientWidth || 1200);
+          const cssScale = availableWidth / baseViewport.width;
+          const viewport = page.getViewport({ scale: cssScale });
+          const deviceScale = Math.max(1, window.devicePixelRatio || 1);
+          canvas.width = Math.round(viewport.width * deviceScale);
+          canvas.height = Math.round(viewport.height * deviceScale);
+          canvas.style.width = `${viewport.width}px`;
+          canvas.style.height = `${viewport.height}px`;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          await page.render({
+            canvasContext: ctx,
+            viewport,
+            transform: deviceScale === 1 ? null : [deviceScale, 0, 0, deviceScale, 0, 0]
+          }).promise;
+        }
+
+        async function renderPdf() {
+          const meta = collectMeta();
+          const definition = await loadTemplateDefinition();
+          if (!definition) {
+            setStatus("Template-Definition fehlt.", true);
+            return;
+          }
+          const scaleDenominator = renderer.normalizeScaleDenominator(meta?.scaleLabel, 1000);
+          const currentToken = ++renderToken;
+          setStatus("PDF-Vorschau wird aktualisiert.");
+          try {
+            const mapDataUrl = renderer.createPlaceholderMapDataUrl(definition.mapFrame, {
+              widthPx: 2200
+            });
+            const pdfBlob = await renderer.buildPdfBlob({
+              definition,
+              meta,
+              baseName: meta.projektname || "Projektgebiet",
+              mapDataUrl,
+              compress: true,
+              scaleDenominator,
+              debug: !!debugToggle?.checked,
+              resolveText: item => resolveText(item, meta, scaleDenominator)
+            });
+            if (!pdfBlob) throw new Error("PDF konnte nicht erstellt werden.");
+            const nextPdfUrl = URL.createObjectURL(pdfBlob);
+            if (currentToken !== renderToken) {
+              URL.revokeObjectURL(nextPdfUrl);
+              return;
+            }
+            if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+            currentPdfUrl = nextPdfUrl;
+            openLink.href = nextPdfUrl;
+            openLink.hidden = false;
+            await renderPdfPage(pdfBlob, currentToken);
+            setStatus("PDF-Vorschau mit dem gleichen Renderer wie im Export.");
+          } catch (error) {
+            setStatus(
+              `PDF-Vorschau konnte nicht aufgebaut werden: ${error?.message || "unbekannter Fehler"}`,
+              true
+            );
+          }
+        }
+
+        function scheduleRender() {
+          window.clearTimeout(scheduledRenderId);
+          scheduledRenderId = window.setTimeout(() => {
+            renderPdf();
+          }, 120);
+        }
+
+        form.addEventListener("submit", event => {
+          event.preventDefault();
+          renderPdf();
+        });
+        form.addEventListener("input", scheduleRender);
+        debugToggle?.addEventListener("change", renderPdf);
+
+        resetBtn?.addEventListener("click", () => {
+          Object.entries(defaults).forEach(([key, value]) => {
+            const field = form.elements.namedItem(key);
+            if (field) field.value = value;
+          });
+          if (debugToggle) debugToggle.checked = false;
+          renderPdf();
+        });
+
+        window.addEventListener("beforeunload", () => {
+          if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+        });
+        window.addEventListener("resize", scheduleRender);
+
+        renderPdf();
+      })();
+    </script>
+  </body>
+</html>

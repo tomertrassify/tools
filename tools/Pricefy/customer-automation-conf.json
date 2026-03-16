@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "description": "Kundenliste mit Make.com-Zielen fuer den Projekt-Export.",
+    "version": 1
+  },
+  "customers": [
+    {
+      "name": "Max Wild",
+      "icon": "Customer-icons/max-wild-favicon.svg",
+      "enabled": true,
+      "make": {
+        "webhookUrl": "https://hook.eu2.make.com/2inavud5m1ikdngrg9xi7s9i8a6e28hy",
+        "event": "trassify_project_export"
+      }
+    }
+  ]
+}

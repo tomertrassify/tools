@@ -1,0 +1,121 @@
+{
+  "_meta": {
+    "description": "Preis-Konfiguration fuer den Preisrechner.",
+    "version": 11
+  },
+  "_readme": [
+    "JSON unterstuetzt keine echten Kommentare. Hinweise stehen deshalb in _readme und _comment.",
+    "Reihenfolge in dieser Datei: 1. Mindestpreis, 2. Endpreis-Rundung, 3. Benchmarks, 4. direkte EUR-Werte, 5. Multiplikatoren."
+  ],
+  "pricing": {
+    "fixedPrices": {
+      "_comment": "Diese Werte zuerst einstellen.",
+      "minimumPrice": {
+        "label": "Mindestpreis",
+        "pricingType": "minimum_price",
+        "unit": "EUR",
+        "value": 1000
+      }
+    },
+    "rounding": {
+      "_comment": "Endpreis wird immer nach oben auf eine glatte Zahl gerundet.",
+      "rules": [
+        {
+          "upToAmount": 1000,
+          "step": 10
+        },
+        {
+          "upToAmount": 5000,
+          "step": 50
+        },
+        {
+          "step": 100
+        }
+      ]
+    },
+    "benchmarks": {
+      "_comment": "Standardwerte pro 1.000 m2. Abweichungen davon fuehren spaeter zu Zu- oder Abschlaegen.",
+      "roadLengthMetersPer1000SquareMeters": {
+        "label": "Standard Strassenlaenge",
+        "pricingType": "benchmark",
+        "unit": "m/1000m2",
+        "value": 8
+      },
+      "buildingsPer1000SquareMeters": {
+        "label": "Standard Gebaeudeanzahl",
+        "pricingType": "benchmark",
+        "unit": "Gebaeude/1000m2",
+        "value": 0.8
+      }
+    },
+    "unitPrices": {
+      "_comment": "Direkte EUR-Werte fuer die Berechnung.",
+      "areaPricing": {
+        "_comment": "Dynamischer Flaechenpreis. Bis 15.000 m2 gilt der hohe Satz, ab 100.000 m2 der niedrige. Dazwischen wird exponentiell interpoliert.",
+        "smallProjectAreaSquareMeters": {
+          "label": "Kleines Projekt bis",
+          "pricingType": "area_threshold",
+          "unit": "m2",
+          "value": 15000
+        },
+        "smallProjectUnitPrice": {
+          "label": "Flaechenpreis kleines Projekt",
+          "pricingType": "unit_price",
+          "unit": "EUR/m2",
+          "value": 0.05
+        },
+        "largeProjectAreaSquareMeters": {
+          "label": "Grosses Projekt ab",
+          "pricingType": "area_threshold",
+          "unit": "m2",
+          "value": 100000
+        },
+        "largeProjectUnitPrice": {
+          "label": "Flaechenpreis grosses Projekt",
+          "pricingType": "unit_price",
+          "unit": "EUR/m2",
+          "value": 0.0095
+        },
+        "curveExponent": {
+          "label": "Kurven-Exponent",
+          "pricingType": "curve_exponent",
+          "unit": "x",
+          "value": 1.6
+        }
+      },
+      "buildingDeviationUnitPrice": {
+        "label": "Gebaeude-Abweichung vom Standard",
+        "pricingType": "delta_unit_price",
+        "unit": "EUR/Gebaeude",
+        "value": 3
+      },
+      "roadDeviationUnitPrice": {
+        "label": "Strassen-Abweichung vom Standard",
+        "pricingType": "delta_unit_price",
+        "unit": "EUR/m",
+        "value": 0.2
+      }
+    },
+    "multipliers": {
+      "_comment": "Multiplikatoren auf Basis von Abweichungen oder Zusatzoptionen.",
+      "fastProcessingMultiplier": {
+        "label": "Schnelle Bearbeitung",
+        "pricingType": "multiplier",
+        "unit": "x",
+        "value": 1.1
+      },
+      "surveyMultiplier": {
+        "label": "Vermessung",
+        "pricingType": "multiplier",
+        "unit": "x",
+        "value": 1.1
+      },
+      "totalRoutePlanMultiplier": {
+        "label": "Gesamttrassenplan",
+        "pricingType": "multiplier",
+        "unit": "x",
+        "value": 2.5
+      }
+    }
+  }
+}

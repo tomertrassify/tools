@@ -1,0 +1,8 @@
+[build]
+command = "python3 app.py --build-only"
+publish = "."
+
+[[headers]]
+for = "/tools.json"
+  [headers.values]
+  Cache-Control = "no-cache"

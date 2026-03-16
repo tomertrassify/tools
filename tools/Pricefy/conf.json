@@ -1,0 +1,318 @@
+{
+  "geoserverBase": "https://geoserver.trassify.cloud/geoserver",
+  "crs": "EPSG:900913",
+  "format": "pbf",
+
+  "center": [10.4515, 51.1657],
+  "zoom": 5.8,
+
+  "minZoomGlobal": 12,
+
+  "basemapDefault": "maptiler-streets",
+  "basemaps": [
+    {
+      "id": "blank",
+      "label": "Keine Basemap",
+      "type": "blank"
+    },
+    {
+      "id": "maptiler-streets",
+      "label": "Trassify Basemap",
+      "type": "style",
+      "styleUrl": "https://api.maptiler.com/maps/019b309a-987e-7e4e-9d4e-390071590545/style.json?key=Dqq0CiymUDnMrBT3kGW9",
+      "preview": "assets/img/trassify-map.webp",
+      "attribution": "© OpenStreetMap contributors, © MapTiler"
+    },
+    {
+      "id": "maptiler-satellite",
+      "label": "MapTiler Satellite",
+      "type": "style",
+      "styleUrl": "https://api.maptiler.com/maps/019be5ca-e8a3-7400-9136-a49a3fbaaa34/style.json?key=Dqq0CiymUDnMrBT3kGW9",
+      "preview": "assets/img/satelite-map.webp",
+      "attribution": "© OpenStreetMap contributors, © MapTiler"
+    },
+    {
+      "id": "simple-map",
+      "label": "Simple Map",
+      "type": "style",
+      "styleUrl": "https://api.maptiler.com/maps/019c0f41-00e2-7846-8dda-5b68bbcbfea3/style.json?key=Dqq0CiymUDnMrBT3kGW9",
+      "preview": "assets/img/simple-map.webp",
+      "attribution": "© OpenStreetMap contributors, © MapTiler"
+    }
+  ],
+  "search": {
+    "provider": "maptiler",
+    "fallback": "nominatim",
+    "key": "Dqq0CiymUDnMrBT3kGW9",
+    "limit": 6,
+    "lang": "de",
+    "country": "de",
+    "minChars": 3,
+    "debounceMs": 250,
+    "resultZoom": 18,
+    "maxZoom": 18
+  },
+  "make": {
+    "enabled": true,
+    "webhookUrl": "https://hook.eu2.make.com/2inavud5m1ikdngrg9xi7s9i8a6e28hy",
+    "event": "trassify_project_export"
+  },
+  "export": {
+    "pdf": {
+      "useTemplate": true,
+      "compress": true,
+      "mapWidthPx": 2200,
+      "mapHeightPx": 1913,
+      "mapImageFormat": "jpeg",
+      "mapImageQuality": 0.82,
+      "templateScale": 1.85,
+      "pageImageFormat": "jpeg",
+      "pageImageQuality": 0.82,
+      "jpegCompression": "MEDIUM"
+    }
+  },
+  "filters": {
+    "betreiber": [],
+    "sparte": []
+  },
+
+  "alkisWmts": {
+    "layerId": "by_amtl_karte",
+    "tileMatrixSet": "smerc",
+    "format": "image/png",
+    "templates": [
+      "https://wmtsod1.bayernwolke.de/wmts/by_amtl_karte/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}",
+      "https://wmtsod2.bayernwolke.de/wmts/by_amtl_karte/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}",
+      "https://wmtsod3.bayernwolke.de/wmts/by_amtl_karte/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}"
+    ]
+  },
+  "alkis": {
+    "allowWmtsFallback": false,
+    "note": "ALKIS-Layer stehen in layers[] mit workspace \"ALKIS\". Lizenz pro Layer als HTML-String im Feld \"Lizenz\"."
+  },
+
+
+  "styleSources": {
+    "sparte": ["sparte", "Sparte", "SPARTE", "e_tob_ukat"],
+    "betreiber": ["betreiber", "Betreiber", "BETREIBER", "e_betr_nam"]
+  },
+  "dataStandSources": ["stand", "Stand", "e_sht_sdat"],
+
+  "styleRules": {
+    "sparteStyles": {
+      "Strom": { "color": [220, 30, 30, 220], "width": 3 },
+      "Gas": { "color": [30, 160, 60, 220], "width": 3 },
+      "Wasser": { "color": [30, 120, 220, 220], "width": 3 },
+      "Telekom": { "color": [120, 60, 200, 220], "width": 3 },
+      "Projektgebiet": { "color": [120, 120, 120, 220], "width": 3 }
+    }
+  },
+
+  "layers": [
+    {
+      "workspace": "Messe",
+      "layer": "Glasfaserausbau",
+      "minZoom": 0,
+      "status": "Fertig",
+      "leitungsauskunft": "leitungsauskunft/dummy.json",
+      "baubeginn": "01.03.2025",
+      "bauende": "30.09.2025",
+      "bauleiter": "Max Mustermann",
+      "kontaktBauleiter": "max.mustermann@example.com",
+      "projektbeschreibung": "Beispielprojekt für den Ausbau.",
+      "cloudOrdner": "https://example.com/cloud/glasfaserausbau"
+    },
+    {
+      "workspace": "Messe",
+      "layer": "BeispielStromleitung",
+      "minZoom": 0,
+      "status": "Fertig",
+      "leitungsauskunft": "leitungsauskunft/dummy.json",
+      "baubeginn": "15.02.2025",
+      "bauende": "15.07.2025",
+      "bauleiter": "Anna Schmidt",
+      "kontaktBauleiter": "anna.schmidt@example.com",
+      "projektbeschreibung": "Musterstrecke Stromleitung.",
+      "cloudOrdner": "https://example.com/cloud/stromleitung"
+    },
+    {
+      "workspace": "Messe",
+      "layer": "Baugrunderkundung",
+      "minZoom": 0,
+      "status": "Fertig",
+      "leitungsauskunft": "leitungsauskunft/dummy.json",
+      "baubeginn": "01.04.2025",
+      "bauende": "15.08.2025",
+      "bauleiter": "Peter Keller",
+      "kontaktBauleiter": "peter.keller@example.com",
+      "projektbeschreibung": "Baugrunduntersuchungen im Projektgebiet.",
+      "cloudOrdner": "https://example.com/cloud/baugrunderkundung"
+    },
+    {
+      "workspace": "Messe",
+      "layer": "Freileitung",
+      "minZoom": 0,
+      "status": "Fertig",
+      "leitungsauskunft": "leitungsauskunft/dummy.json",
+      "baubeginn": "10.01.2025",
+      "bauende": "30.06.2025",
+      "bauleiter": "Laura Braun",
+      "kontaktBauleiter": "laura.braun@example.com",
+      "projektbeschreibung": "Freileitungsabschnitt Nord.",
+      "cloudOrdner": "https://example.com/cloud/freileitung"
+    },
+    {
+      "workspace": "Template",
+      "layer": "Buxheim",
+      "minZoom": 0,
+      "status": "Fertig",
+      "leitungsauskunft": "leitungsauskunft/dummy.json",
+      "baubeginn": "01.05.2025",
+      "bauende": "30.11.2025",
+      "bauleiter": "Sabine Vogel",
+      "kontaktBauleiter": "sabine.vogel@example.com",
+      "projektbeschreibung": "Projektgebiet Buxheim.",
+      "cloudOrdner": "https://example.com/cloud/buxheim"
+    },
+    {
+      "workspace": "Template",
+      "layer": "Kardorf",
+      "minZoom": 0,
+      "status": "in Arbeit",
+      "leitungsauskunft": "leitungsauskunft/dummy.json",
+      "baubeginn": "20.03.2025",
+      "bauende": "20.12.2025",
+      "bauleiter": "Tim Berger",
+      "kontaktBauleiter": "tim.berger@example.com",
+      "projektbeschreibung": "Projektgebiet Kardorf.",
+      "cloudOrdner": "https://example.com/cloud/kardorf"
+    },
+    {
+      "workspace": "ALKIS",
+      "layer": "be_alkis_merged",
+      "minZoom": 0,
+      "attribution": "✅"
+    },
+    {
+      "workspace": "ALKIS",
+      "layer": "rp_alkis_merged",
+      "minZoom": 0,
+      "attribution": "✅"
+    },
+    {
+      "workspace": "ALKIS",
+      "layer": "sl_alkis_merged",
+      "minZoom": 0,
+      "attribution": "✅"
+    },
+        {
+      "workspace": "ALKIS",
+      "layer": "hb_alkis_merged",
+      "minZoom": 0,
+      "attribution": "✅"
+
+    },
+            {
+      "workspace": "ALKIS",
+      "layer": "he_alkis_merged",
+      "minZoom": 0,
+      "attribution": "✅"
+
+    },
+                {
+      "workspace": "ALKIS",
+      "layer": "bb_alkis_merged",
+      "minZoom": 0,
+      "attribution": "✅"
+
+    },
+                    {
+      "workspace": "ALKIS",
+      "layer": "ni_alkis_merged",
+      "minZoom": 0,
+      "attribution": "✅"
+
+    },
+                    {
+      "workspace": "ALKIS",
+      "layer": "hh_alkis_merged_mit_crs",
+      "minZoom": 0,
+      "attribution": "✅"
+
+    },
+                        {
+      "workspace": "ALKIS",
+      "layer": "bw_alkis_merged__alkis",
+      "minZoom": 0,
+      "attribution": ""
+
+    },
+                            {
+      "workspace": "ALKIS",
+      "layer": "mv_alkis_merged",
+      "minZoom": 0,
+      "attribution": ""
+
+    },
+                            {
+      "workspace": "ALKIS",
+      "layer": "nrw_alkis_merged__alkis",
+      "minZoom": 0,
+      "attribution": ""
+
+    },
+                            {
+      "workspace": "ALKIS",
+      "layer": "sh_alkis_merged__alkis",
+      "minZoom": 0,
+      "attribution": ""
+
+    },
+                                {
+      "workspace": "ALKIS",
+      "layer": "sn_alkis_merged__alkis",
+      "minZoom": 0,
+      "attribution": ""
+
+    },
+                                    {
+      "workspace": "ALKIS",
+      "layer": "st_alkis_merged__alkis",
+      "minZoom": 0,
+      "attribution": ""
+
+    },
+                                {
+      "workspace": "ALKIS",
+      "layer": "th_alkis_merged",
+      "minZoom": 0,
+      "attribution": ""
+
+    },
+        {
+      "workspace": "Messe",
+      "layer": "landkaeserei_herzog",
+      "minZoom": 0,
+      "leitungsauskunft": "leitungsauskunft/dummy.json",
+      "baubeginn": "",
+      "bauende": "",
+      "bauleiter": "",
+      "kontaktBauleiter": "",
+      "projektbeschreibung": "",
+      "cloudOrdner": ""
+    },
+            {
+      "workspace": "Messe",
+      "layer": "BohrpunktPuffer(55m)",
+      "minZoom": 0,
+      "leitungsauskunft": "leitungsauskunft/dummy.json",
+      "status": "Angefragt",
+      "baubeginn": "",
+      "bauende": "",
+      "bauleiter": "",
+      "kontaktBauleiter": "",
+      "projektbeschreibung": "",
+      "cloudOrdner": ""
+    }
+  ]
+}

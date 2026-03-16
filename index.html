@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trassify Toolbox</title>
+    <meta
+      name="description"
+      content="Interne Trassify Toolbox mit kuratierten Tools fuer Plananfragen, Datenaufbereitung und Projektpakete."
+    />
+    <link rel="icon" href="./assets/theme/images/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="./assets/theme/trassify-theme.css" />
+    <link rel="stylesheet" href="./assets/dashboard.css" />
+  </head>
+  <body class="trassify-theme-body dashboard-page">
+    <div class="trassify-page">
+      <div class="trassify-page-lines" aria-hidden="true">
+        <div class="trassify-page-lines__outer">
+          <div class="trassify-page-lines__inner"></div>
+        </div>
+      </div>
+
+      <main class="trassify-shell">
+        <header class="trassify-topbar">
+          <a class="trassify-brand" href="./">
+            <img
+              class="trassify-brand-mark"
+              src="./assets/theme/images/brand-mark.svg"
+              alt="Trassify"
+            />
+            <span class="trassify-brand-caption">Toolbox</span>
+          </a>
+
+          <div class="trassify-topbar-actions">
+            <span class="trassify-pill">Interne Arbeitsoberflaechen</span>
+            <a class="trassify-pill trassify-pill--solid" href="#tool-grid">
+              Tools ansehen
+            </a>
+          </div>
+        </header>
+
+        <section class="dashboard-section-head">
+          <div>
+            <p class="trassify-eyebrow trassify-eyebrow--dark">Toolbox</p>
+            <h2 class="trassify-heading">Verfuegbare Tools</h2>
+          </div>
+        </section>
+
+        <section class="tool-list-frame">
+          <section id="tool-grid" class="tool-grid" aria-live="polite"></section>
+        </section>
+      </main>
+    </div>
+
+    <template id="tool-card-template">
+      <a class="tool-card">
+        <div class="tool-card-top">
+          <span class="tool-icon"></span>
+          <div class="tool-card-meta">
+            <span class="tool-category"></span>
+            <span class="tool-order"></span>
+          </div>
+        </div>
+        <div class="tool-card-main">
+          <h3 class="tool-name"></h3>
+          <p class="tool-description"></p>
+        </div>
+        <div class="tool-card-bottom">
+          <span class="tool-link-label">Tool oeffnen</span>
+        </div>
+      </a>
+    </template>
+
+    <script src="./assets/dashboard.js" defer></script>
+  </body>
+</html>

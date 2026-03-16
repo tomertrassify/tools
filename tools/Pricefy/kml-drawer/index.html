@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Project Area Planner</title>
+    <!-- Leaflet -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <!-- Turf.js for buffering -->
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+    <!-- togeojson for KML import -->
+    <script src="https://unpkg.com/togeojson@0.16.0/dist/togeojson.umd.js"></script>
+    <!-- Leaflet Control Geocoder (OSM/Nominatim) -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+    />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <!-- Dependency: Leaflet.Toolbar for Distortable Image UI -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-toolbar@0.4.0/dist/leaflet.toolbar.css"
+    />
+    <script src="https://unpkg.com/leaflet-toolbar@0.4.0/dist/leaflet.toolbar.js"></script>
+    <!-- Leaflet Distortable Image for quick georeferencing -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.distortableimage@0.20.0/dist/leaflet.distortableimage.css"
+    />
+    <script src="https://unpkg.com/leaflet.distortableimage@0.20.0/dist/leaflet.distortableimage.js"></script>
+    <!-- Export libs: html2canvas, jsPDF, JSZip -->
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" type="image/png" href="images/favicon.png" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="controls">
+        <section class="panel layer-panel">
+          <div class="panel-title">Layer</div>
+          <div id="objectsList" class="list"></div>
+        </section>
+        <section class="panel hidden" id="georefSettings">
+          <div class="row">
+            <button id="togglePlanEditBtn" disabled>Bearbeiten</button>
+            <button id="removePlanBtn" disabled>Entfernen</button>
+          </div>
+          <div class="row">
+            <label>
+              Deckkraft:
+              <input id="planOpacity" type="range" min="0" max="1" step="0.05" value="0.6" />
+            </label>
+            <label>
+              <input id="planVisibleChk" type="checkbox" checked />
+              Sichtbar
+            </label>
+          </div>
+        </section>
+
+        
+
+        
+
+        <section class="panel hidden" id="bufferSection">
+          <div class="panel-title">Puffer</div>
+          <div class="row">
+            <label>
+              Abstand (m):
+              <input id="bufferInput" type="number" min="0" step="1" value="25" />
+            </label>
+            <input id="bufferRange" type="range" min="0" max="200" step="1" value="25" />
+          </div>
+          <div class="row">
+              <label>
+                Darstellung:
+              <select id="bufferMode">
+                <option value="polygon">Fläche</option>
+                <option value="outline" selected>Umriss (Linie)</option>
+              </select>
+            </label>
+            <button id="applyBufferBtn" disabled>Puffer anwenden</button>
+          </div>
+        </section>
+
+        
+
+      </div>
+      <div id="map"></div>
+      <div id="exportMask" aria-hidden="true"></div>
+      <div id="mapFooter" aria-hidden="true">
+        <div id="sourceLabel">kml drawer · made by Trassify · Basemap: OpenStreetMap</div>
+      </div>
+      <div id="toolbar" class="toolbar">
+        <div class="toolbar-inner tool-row" role="toolbar" aria-label="Werkzeuge">
+          <button class="icon-btn" id="selectBtn" aria-label="Auswahl/Objekt wählen" data-tip="Auswahl">
+            <img src="./images/PhNavigationArrow.svg" class="icon" alt="" aria-hidden="true" />
+          </button>
+          <div class="draw-split">
+            <button class="icon-btn draw-btn" id="startBtn" aria-label="Neu/Zeichnen" data-tip="Zeichnen">
+              <img src="./images/PhPenNib.svg" class="icon" alt="" aria-hidden="true" />
+            </button>
+            <button class="icon-btn dropdown-btn draw-toggle" id="drawMenuBtn" aria-label="Zeichenmodus wählen" data-tip="Modus wählen">
+              <img src="./images/PhCaretDownLight.svg" class="icon" alt="" aria-hidden="true" />
+            </button>
+            <div class="draw-menu hidden" id="drawMenu">
+              <button class="draw-menu-item active" data-mode="draw">
+                <img src="./images/PhPenNib.svg" class="icon" alt="" aria-hidden="true" />
+                <span>Zeichnen</span>
+              </button>
+              <button class="draw-menu-item" data-mode="attach">
+                <span class="plus-icon" aria-hidden="true">➕</span>
+                <span>Anfügen</span>
+              </button>
+            </div>
+          </div>
+          <button class="icon-btn" id="bufferBtn" aria-label="Puffer" data-tip="Puffer" disabled>
+            <img src="./images/PhBandaids.svg" class="icon" alt="" aria-hidden="true" />
+          </button>
+          <button class="icon-btn" id="measureBtn" aria-label="Strecke messen" data-tip="Messen">
+            <img src="./images/PhRuler.svg" class="icon" alt="" aria-hidden="true" />
+          </button>
+          <button class="icon-btn" id="infoBtn" aria-label="Adresse kopieren" data-tip="Adresse kopieren">
+            <img src="./images/PhInfo.svg" class="icon" alt="" aria-hidden="true" />
+          </button>
+          <span class="divider" aria-hidden="true"></span>
+          <button class="icon-btn" id="kmlIconBtn" aria-label="KML laden" data-tip="KML laden">
+            <img src="./images/PhUploadSimple.svg" class="icon" alt="" aria-hidden="true" />
+          </button>
+          <input id="kmlFile" type="file" accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz" style="display:none" />
+          <button class="icon-btn" id="planIconBtn" aria-label="Georeferenzieren" data-tip="Georeferenzieren">
+            <img src="./images/PhHashDuotone.svg" class="icon" alt="" aria-hidden="true" />
+          </button>
+          <input id="planFile" type="file" accept="image/*" style="display:none" />
+        </div>
+      </div>
+      <div class="map-nav">
+        <div class="nav-left">
+          <div class="nav-logo-wrap">
+            <button class="nav-logo-btn" id="navMenuToggle" aria-label="Menü öffnen">
+              <img src="images/trassify-logo.svg" alt="Trassify" class="nav-logo" />
+              <img src="images/PhCaretDownLight.svg" class="nav-caret icon" alt="" aria-hidden="true" />
+            </button>
+            <div class="nav-menu" id="navMenu">
+              <button class="nav-menu-item" type="button">Neues Projekt</button>
+              <button class="nav-menu-item" type="button">Projekt öffnen</button>
+              <button class="nav-menu-item" type="button" id="settingsMenuBtn">Einstellungen</button>
+              <button class="nav-menu-item" type="button" id="undoMenuBtn" disabled>Rückgängig</button>
+              <button class="nav-menu-item" type="button" id="redoMenuBtn" disabled>Wiederherstellen</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-spacer" aria-hidden="true"></div>
+        <div class="nav-right">
+          <div id="basemapSwitcher" class="basemap-switch nav-basemap" aria-label="Hintergrundkarte wählen">
+          <button class="basemap-option" data-layer="none" id="baseNoneBtn" aria-pressed="false" title="Keine Hintergrundkarte">
+            <span class="base-icon base-icon-none" aria-hidden="true"></span>
+          </button>
+          <button class="basemap-option active" data-layer="osm" id="baseOsmBtn" aria-pressed="true" title="OpenStreetMap">
+            <span class="base-icon base-icon-maptiler" aria-hidden="true"></span>
+          </button>
+          <button class="basemap-option" data-layer="sat" id="baseSatBtn" aria-pressed="false" title="Satellit">
+            <span class="base-icon base-icon-sat" aria-hidden="true"></span>
+          </button>
+          </div>
+          <span class="nav-divider" aria-hidden="true"></span>
+          <div class="nav-search" role="search">
+            <button id="searchToggle" class="search-toggle" title="Suche" aria-label="Suche öffnen">
+              <img src="./images/PhMagnifyingGlass.svg" class="icon" alt="" aria-hidden="true" />
+            </button>
+            <div id="searchPanel" class="search-panel hidden">
+              <div class="search-box">
+                <input id="searchInput" type="text" placeholder="Ort oder Adresse" aria-label="Adresse suchen" />
+                <button id="searchBtn" title="Suchen" aria-label="Suchen">
+                  <img src="./images/PhMagnifyingGlass.svg" class="icon" alt="" aria-hidden="true" />
+                </button>
+                <div id="searchSuggestions" class="search-suggestions hidden" role="listbox"></div>
+              </div>
+            </div>
+          </div>
+          <div class="nav-export">
+            <div class="export-actions">
+              <button id="exportBtn" title="Export starten">Export</button>
+              <button id="exportMenuBtn" class="split" title="Weitere Optionen">▾</button>
+              <div id="exportMenu" class="menu hidden">
+                <button id="menuPdfOnly">Nur Plan (PDF)</button>
+                <button id="menuKmlOnly">Nur KML</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export modal (paper + orientation + controls) -->
+    <div id="exportModal" class="export-modal hidden">
+      <div class="export-card" role="dialog" aria-modal="true">
+        <div class="title">PDF‑Export</div>
+        <div class="row">
+          <input id="expProject" type="text" placeholder="Projektname/Ort" />
+        </div>
+        <div class="row">
+          <input id="expKst" type="text" placeholder="KST" />
+        </div>
+        <div class="row">
+          <input id="expClient" type="text" placeholder="Auftraggeber" />
+        </div>
+        <div class="row">
+          <input id="expContact" type="text" placeholder="Ansprechpartner" />
+        </div>
+        <div class="row">
+          <input id="expStartDate" type="date" />
+        </div>
+        <div class="row">
+          <input id="expEndDate" type="date" placeholder="Bauende" />
+        </div>
+        <div class="row">
+          <textarea id="expDesc" placeholder="Projektbeschreibung"></textarea>
+        </div>
+        <input
+          id="expWebhookUrl"
+          type="hidden"
+          value="https://hook.eu2.make.com/2inavud5m1ikdngrg9xi7s9i8a6e28hy"
+          aria-hidden="true"
+        />
+        <div class="row">
+          <button id="expNextBtn" class="primary">Download starten</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schritt 1: Leiste über der Karte -->
+    <div id="exportStepBar" class="export-step hidden">
+      <span>Ausschnitt setzen und dann fortfahren</span>
+      <div class="actions">
+        <button id="expStepNext" class="primary">Weiter</button>
+        <button id="expStepCancel">Abbrechen</button>
+      </div>
+    </div>
+
+    <script src="./main.js"></script>
+  </body>
+  </html>

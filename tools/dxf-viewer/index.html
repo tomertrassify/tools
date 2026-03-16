@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CAD Live Viewer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dxf-parser@1.1.2/dist/dxf-parser.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three-dxf@1.3.1/dist/three-dxf.js"></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="grid">
+        <aside class="panel panel-sidebar">
+          <div class="section-head">
+            <h2>Objekttypen</h2>
+            <div class="toggle-actions">
+              <button id="enableAllTypesBtn" class="mini-btn" type="button">Alle</button>
+              <button id="disableAllTypesBtn" class="mini-btn" type="button">Keine</button>
+            </div>
+          </div>
+
+          <label class="sort-control" for="typeSortSelect">
+            Sortierung:
+            <select id="typeSortSelect" class="sort-select">
+              <option value="count">Menge</option>
+              <option value="name">Name (A-Z)</option>
+            </select>
+          </label>
+
+          <ul id="typeList" class="type-list">
+            <li class="empty-row">Noch keine Datei geladen.</li>
+          </ul>
+
+          <div class="section-head">
+            <h2>Layer</h2>
+            <div class="toggle-actions">
+              <button id="enableAllLayersBtn" class="mini-btn" type="button">Alle</button>
+              <button id="disableAllLayersBtn" class="mini-btn" type="button">Keine</button>
+            </div>
+          </div>
+          <ul id="layerList" class="layer-list">
+            <li class="empty-row">Noch keine Datei geladen.</li>
+          </ul>
+
+          <button id="exportGeoJsonBtn" class="primary-btn" type="button">
+            Export fur QGIS (GeoJSON)
+          </button>
+        </aside>
+
+        <section class="panel panel-viewer">
+          <div id="viewerStatus" class="viewer-status">Ziehe eine DXF/DWG-Datei in die Ansicht.</div>
+          <div id="viewer" class="viewer"></div>
+          <div id="viewerPlaceholder" class="viewer-placeholder">
+            <p>Datei auf den Canvas ziehen (Drag & Drop).</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div id="globalDropOverlay" class="global-drop-overlay" aria-hidden="true">
+      <div class="global-drop-card">
+        <p class="global-drop-title">Datei hier ablegen</p>
+        <p class="global-drop-subtitle">DXF direkt oder DWG zur Konvertierung hochladen</p>
+      </div>
+    </div>
+  </body>
+</html>

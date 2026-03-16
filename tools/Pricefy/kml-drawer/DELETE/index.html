@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MapLibre Basemap Deutschland</title>
+  <link
+    href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css"
+    rel="stylesheet"
+  />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    #map {
+      position: absolute;
+      inset: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="map" aria-label="Karte von Deutschland"></div>
+
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <script>
+    const map = new maplibregl.Map({
+      container: "map",
+      // Dein Custom-Style auf Maptiler
+      style: "https://api.maptiler.com/maps/019b136f-3389-729f-a3fe-fa92ff7f9e98/style.json?key=Dqq0CiymUDnMrBT3kGW9",
+      center: [10.4515, 51.1657], // Mitte von Deutschland
+      zoom: 5.9,
+      minZoom: 5.9, // verhindert weiteres Herauszoomen
+      attributionControl: true,
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), "top-left");
+    map.addControl(new maplibregl.ScaleControl({ maxWidth: 140, unit: "metric" }));
+  </script>
+</body>
+</html>

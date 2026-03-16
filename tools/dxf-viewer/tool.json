@@ -1,0 +1,7 @@
+{
+  "name": "DXF Viewer",
+  "description": "Oeffnet DXF- und DWG-Dateien im Browser, filtert nach Layern und Objekttypen und exportiert sichtbare Inhalte als GeoJSON.",
+  "category": "CAD",
+  "icon": "D",
+  "order": 3
+}

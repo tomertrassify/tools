@@ -1,0 +1,99 @@
+{
+  "_meta": {
+    "description": "Konfiguration fuer Export-Formular und projekt-daten.json Feldnamen.",
+    "version": 1
+  },
+  "form": {
+    "fields": {
+      "projectName": {
+        "label": "Projektname",
+        "placeholder": "z. B. Buxheim Nord"
+      },
+      "customer": {
+        "label": "Kunde",
+        "placeholder": "Kunde suchen",
+        "emptyOptionLabel": "Keine Auswahl"
+      },
+      "costCenter": {
+        "label": "Kostenstelle",
+        "placeholder": "z. B. 4711"
+      },
+      "activityType": {
+        "label": "Art der Tätigkeit",
+        "options": [
+          { "value": "", "label": "Keine Auswahl" },
+          { "value": "Planung", "label": "Planung" },
+          { "value": "Ausführung", "label": "Ausführung" }
+        ]
+      },
+      "client": {
+        "label": "Auftraggeber",
+        "placeholder": "Firma/Behörde"
+      },
+      "contractor": {
+        "label": "Bauausführendes Unternehmen",
+        "placeholder": "Firma"
+      },
+      "civilEngineeringType": {
+        "label": "Art des Tiefbaus",
+        "options": [
+          { "value": "", "label": "Keine Auswahl" },
+          { "value": "Offene Bauweise", "label": "Offene Bauweise" },
+          { "value": "Geschlossene Bauweise", "label": "Geschlossene Bauweise" },
+          {
+            "value": "Offene und geschlossene Bauweise",
+            "label": "Offene und geschlossene Bauweise"
+          }
+        ]
+      },
+      "siteManager": {
+        "label": "Bauleitung",
+        "placeholder": "Name"
+      },
+      "siteManagerContact": {
+        "label": "Kontakt Bauleitung",
+        "placeholder": "Telefon / E-Mail"
+      },
+      "address": {
+        "label": "Straße (nahe Projektgebiet)",
+        "placeholder": "z. B. Musterstraße 12, Ort"
+      },
+      "startDate": {
+        "label": "Baubeginn"
+      },
+      "endDate": {
+        "label": "Bauende"
+      },
+      "projectDescription": {
+        "label": "Projektbeschreibung",
+        "placeholder": "Kurzbeschreibung des Vorhabens"
+      }
+    }
+  },
+  "exportJson": {
+    "fieldMap": {
+      "projectName": "projectName",
+      "customer": "customer",
+      "costCenter": "costCenter",
+      "client": "client",
+      "contractor": "contractor",
+      "startDate": "startDate",
+      "endDate": "endDate",
+      "coordinates": "coordinates",
+      "address": "address",
+      "requestReason": "requestReason",
+      "projectDescription": "projectDescription",
+      "siteManager": "siteManager",
+      "siteManagerContact": "siteManagerContact",
+      "activityType": "activityType",
+      "civilEngineeringType": "civilEngineeringType",
+      "geojsonName": "geojsonName",
+      "geojsonData": "geojsonData",
+      "plotLayoutTelekom": "plotLayoutTelekom",
+      "plotScaleTelekom": "plotScaleTelekom",
+      "plotExportCrsTelekom": "plotExportCrsTelekom",
+      "plotExportDpiTelekom": "plotExportDpiTelekom",
+      "plotPreviewMode": "plotPreviewMode"
+    }
+  }
+}

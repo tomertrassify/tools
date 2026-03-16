@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trassify – Demande de projet</title>
+    <meta
+      name="description"
+      content="Demande de projet Trassify pour les renseignements sur les réseaux et la numérisation, avec définition interactive de la zone du projet."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Trassify – Demande de projet" />
+    <meta
+      property="og:description"
+      content="Demande de projet Trassify pour les renseignements sur les réseaux et la numérisation, avec définition interactive de la zone du projet."
+    />
+    <meta name="twitter:title" content="Trassify – Demande de projet" />
+    <meta
+      name="twitter:description"
+      content="Demande de projet Trassify pour les renseignements sur les réseaux et la numérisation, avec définition interactive de la zone du projet."
+    />
+    <script type="text/javascript" charset="UTF-8" src="//cdn.cookie-script.com/s/c3ff2cee4ab5cc6fa9eb6f56427b95e6.js"></script>
+    <style>html.trassify-fr-pending body{visibility:hidden;}</style>
+    <script>document.documentElement.classList.add('trassify-fr-pending');window.setTimeout(function(){document.documentElement.classList.remove('trassify-fr-pending');},3000);</script>
+    <!-- Leaflet -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <!-- Turf.js for buffering -->
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+    <!-- togeojson for KML import -->
+    <script src="https://unpkg.com/togeojson@0.16.0/dist/togeojson.umd.js"></script>
+    <!-- JSZip (KMZ import) -->
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" type="image/png" href="images/favicon.png" />
+    <noscript>
+      <style>
+        #toolView { display: none !important; }
+        #stepPackage.hidden,
+        #stepDetails.hidden,
+        #stepSummary.hidden,
+        #describeWrap.hidden { display: block !important; }
+        .nojs-only { display: flex !important; }
+      </style>
+    </noscript>
+  </head>
+  <body>
+    <form
+      id="app"
+      class="app-shell"
+      name="projektanfrage"
+      method="POST"
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+      enctype="multipart/form-data"
+      action="./danke.html"
+    >
+      <input type="hidden" name="form-name" value="projektanfrage" />
+      <p hidden>
+        <label>Ne pas remplir : <input name="bot-field" /></label>
+      </p>
+      <input type="hidden" name="submittedAt" />
+      <input type="hidden" name="uploadFileName" />
+      <input type="hidden" name="geojsonFeatureCount" />
+      <input type="file" name="areaKmlGenerated" hidden />
+      <noscript>
+        <div class="summary-block">
+          <div class="summary-title">Information</div>
+          <div class="service-body">
+            JavaScript est désactivé. Les fonctions de carte et de dessin ne sont pas disponibles, mais vous pouvez remplir tous les champs ci-dessous et joindre des fichiers.
+          </div>
+        </div>
+      </noscript>
+		      <section id="stepChoice" class="step form-step with-side">
+		        <div class="step-card">
+		          <div class="step-left">
+            <div class="progress">
+              <div class="progress-meta">
+                <span class="progress-label">Étape</span>
+                <span class="progress-count">1/4</span>
+              </div>
+              <div class="progress-track">
+                <span class="progress-fill" style="width: 25%;"></span>
+              </div>
+            </div>
+            <div class="step-kicker">Zone du projet</div>
+            <h1 class="step-title">Comment souhaitez-vous définir la zone de votre projet ?</h1>
+	            <p class="step-subtitle">Indiquez-nous pour quelle zone vous souhaitez obtenir les renseignements sur les réseaux tiers.</p>
+            <div class="option-grid" role="radiogroup" aria-label="Choix de la zone du projet">
+              <label class="option-card">
+                <input type="radio" name="areaMethod" value="upload" />
+                <span class="option-indicator" aria-hidden="true"></span>
+                <span class="option-content">
+                  <span class="option-title">Téléverser un KML/KMZ</span>
+	                  <span class="option-desc">Importer une zone déjà disponible au format KML ou KMZ</span>
+                </span>
+                <span class="option-icon" aria-hidden="true">
+                  <img src="./images/PhUploadSimple.svg" alt="" />
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="areaMethod" value="draw" />
+                <span class="option-indicator" aria-hidden="true"></span>
+                <span class="option-content">
+                  <span class="option-title">Tracer la zone du projet</span>
+	                  <span class="option-desc">La dessiner facilement avec l’outil de tracé</span>
+                </span>
+                <span class="option-icon" aria-hidden="true">
+                  <img src="./images/IcTwotoneDraw.svg" alt="" />
+                </span>
+              </label>
+              <div class="option-row">
+                <button id="describeBackBtn" class="btn btn-subtle btn-arrow hidden" type="button" aria-label="Retour au choix">←</button>
+                <label class="option-card">
+                  <input type="radio" name="areaMethod" value="describe" />
+                  <span class="option-indicator" aria-hidden="true"></span>
+                  <span class="option-content">
+                    <span class="option-title">Décrire avec des mots</span>
+	                    <span class="option-desc">Décrire la zone ou téléverser d’autres formats de plan</span>
+                  </span>
+                  <span class="option-icon" aria-hidden="true">
+                    <img src="./images/PhInfo.svg" alt="" />
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div id="describeWrap" class="describe-wrap hidden">
+              <label for="describeText">Décrire la zone du projet</label>
+              <textarea id="describeText" name="describeText" placeholder="p. ex. angle de la rue Exemple, le long du parc jusqu’au pont"></textarea>
+              <div class="address-field">
+                <label for="describeAddress">Adresse ou adresse proche de la zone du projet</label>
+                <input id="describeAddress" name="describeAddress" type="text" placeholder="Saisir une adresse" autocomplete="off" />
+                <div id="addressSuggestions" class="address-suggestions hidden" role="listbox"></div>
+              </div>
+              <div class="file-field">
+                <label for="describeFile">Téléverser un fichier</label>
+                <input id="describeFile" name="describeFile" type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" />
+                <div class="file-hint">PDF, PNG, JPG ou JPEG (max. 1 Mo)</div>
+              </div>
+            </div>
+            <div class="file-field nojs-only">
+              <label for="areaUploadFile">Fichier de zone du projet (KML/KMZ)</label>
+              <input id="areaUploadFile" name="areaUploadFile" type="file" accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz" />
+              <div class="file-hint">Nécessaire uniquement si JavaScript est désactivé.</div>
+            </div>
+		            <div class="step-actions">
+		              <button id="choiceNextBtn" class="btn btn-primary" type="button" disabled>Continuer</button>
+		            </div>
+		          </div>
+		          <div class="step-right">
+		            <div class="preview-card image-only">
+		              <img class="preview-image" src="./images/platzhalter.png" alt="Aperçu de la carte" />
+		            </div>
+		          </div>
+		        </div>
+		      </section>
+
+      <section id="stepPackage" class="step form-step no-side hidden">
+        <div class="step-card">
+          <div class="step-left">
+            <div class="progress">
+              <div class="progress-meta">
+                <span class="progress-label">Étape</span>
+                <span class="progress-count">2/4</span>
+              </div>
+              <div class="progress-track">
+                <span class="progress-fill" style="width: 50%;"></span>
+              </div>
+            </div>
+            <div class="step-kicker">Pack de services</div>
+            <h1 class="step-title">Quel pack correspond à votre besoin ?</h1>
+            <p class="step-subtitle">Choisissez le pack dont vous avez besoin pour ce projet.</p>
+            <div class="option-grid" role="radiogroup" aria-label="Choix du pack de services">
+              <label class="option-card">
+                <input type="radio" name="packageMethod" value="kombiniert" checked />
+                <span class="option-indicator" aria-hidden="true"></span>
+                <span class="option-content">
+                  <span class="option-title">Renseignements sur les réseaux et numérisation</span>
+	                  <span class="option-desc">Vous recevez une carte complète des réseaux dans le format souhaité, avec de nombreuses informations complémentaires</span>
+                </span>
+                <span class="option-icon" aria-hidden="true">
+                  <img src="./images/PhBandaids.svg" alt="" />
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="packageMethod" value="leitung" />
+                <span class="option-indicator" aria-hidden="true"></span>
+                <span class="option-content">
+                  <span class="option-title">Renseignements sur les réseaux</span>
+	                  <span class="option-desc">Nous obtenons pour vous les renseignements sur les réseaux dans le format d’origine de chaque exploitant</span>
+                </span>
+                <span class="option-icon" aria-hidden="true">
+                  <img src="./images/PhMagnifyingGlass.svg" alt="" />
+                </span>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="packageMethod" value="digitalisierung" />
+                <span class="option-indicator" aria-hidden="true"></span>
+                <span class="option-content">
+                  <span class="option-title">Numérisation</span>
+	                  <span class="option-desc">Nous numérisons les plans que vous avez déjà obtenus dans le format souhaité</span>
+                </span>
+                <span class="option-icon" aria-hidden="true">
+                  <img src="./images/PhPenNib.svg" alt="" />
+                </span>
+              </label>
+            </div>
+            <div class="step-actions">
+              <button id="packageBackBtn" class="btn btn-ghost" type="button">Retour</button>
+              <button id="packageNextBtn" class="btn btn-primary" type="button" disabled>Continuer</button>
+            </div>
+          </div>
+          <div class="step-right">
+            <div class="preview-card">
+              <div class="service-panel" aria-live="polite">
+                <div class="service-label">Pack sélectionné</div>
+                <div id="packageDetailTitle" class="service-title">Veuillez choisir</div>
+                <div id="packageDetailBody" class="service-body">Dès qu’un pack est sélectionné, l’explication correspondante apparaît ici.</div>
+              </div>
+              <div class="preview-map" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="stepDetails" class="step form-step no-side hidden">
+        <div class="step-card">
+          <div class="step-left">
+            <div class="progress">
+              <div class="progress-meta">
+                <span class="progress-label">Étape</span>
+                <span class="progress-count">3/4</span>
+              </div>
+              <div class="progress-track">
+                <span class="progress-fill" style="width: 75%;"></span>
+              </div>
+            </div>
+            <div class="step-kicker">Détails</div>
+            <h1 class="step-title">Saisir les informations du projet</h1>
+            <p class="step-subtitle">Veuillez compléter les informations en fonction du pack choisi.</p>
+            <div class="form-section">
+              <div id="packageFieldsLeitung">
+                <div class="form-subtitle">Informations pour les renseignements sur les réseaux</div>
+                <div class="form-grid">
+                <div class="form-field span-2">
+                  <label for="projName">Nom du projet</label>
+                  <input id="projName" name="projName" type="text" placeholder="Nom du projet" />
+                </div>
+                <div class="form-field">
+                  <label for="baubeginn">Début des travaux</label>
+                  <input id="baubeginn" name="baubeginn" type="date" />
+                </div>
+                <div class="form-field">
+                  <label for="bauende">Fin des travaux</label>
+                  <input id="bauende" name="bauende" type="date" />
+                </div>
+                <div class="form-field">
+                  <label for="artTaetigkeit">Type d’activité</label>
+                  <select id="artTaetigkeit" name="artTaetigkeit">
+                    <option value="" selected>Veuillez choisir</option>
+                    <option value="planung">Planification</option>
+                    <option value="ausfuehrung">Exécution</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label for="artTiefbau">Type de travaux de génie civil</label>
+                  <select id="artTiefbau" name="artTiefbau">
+                    <option value="" selected>Veuillez choisir</option>
+                    <option value="offen">Tranchée ouverte</option>
+                    <option value="geschlossen">Méthode sans tranchée</option>
+                    <option value="beides">Tranchée ouverte et méthode sans tranchée</option>
+                  </select>
+                </div>
+                <div class="form-field span-2">
+                  <label for="projektbeschreibung">Description du projet</label>
+                  <textarea id="projektbeschreibung" name="projektbeschreibung" placeholder="Brève description"></textarea>
+                </div>
+                <div class="form-field">
+                  <label for="anfragendesUnternehmen">Entreprise demandeuse</label>
+                  <input id="anfragendesUnternehmen" name="anfragendesUnternehmen" type="text" placeholder="Entreprise" />
+                </div>
+                <div class="form-field">
+                  <label for="auftraggeberBauvorhaben">Maître d’ouvrage</label>
+                  <input id="auftraggeberBauvorhaben" name="auftraggeberBauvorhaben" type="text" placeholder="Maître d’ouvrage" />
+                </div>
+                <div class="form-field">
+                  <label for="bauleitung">Direction de chantier</label>
+                  <input id="bauleitung" name="bauleitung" type="text" placeholder="Nom" />
+                </div>
+                <div class="form-field">
+                  <label for="kontaktBauleitung">Contact de la direction de chantier</label>
+                  <input id="kontaktBauleitung" name="kontaktBauleitung" type="text" placeholder="Téléphone ou e-mail" />
+                </div>
+              </div>
+            </div>
+            <div id="packageFieldsDigit">
+              <div class="form-subtitle">Informations pour la numérisation</div>
+              <div class="form-grid">
+                <div class="form-field span-2">
+                  <label for="koordinatenSystem">Système de coordonnées préféré</label>
+                  <input id="koordinatenSystem" name="koordinatenSystem" type="text" placeholder="Standard : ETRS89 / UTM zone 32N - EPSG:25832" />
+                </div>
+                <div class="form-field">
+                  <label for="sonderanforderungen">Exigences particulières</label>
+                  <select id="sonderanforderungen" name="sonderanforderungen">
+                    <option value="" selected>Veuillez choisir</option>
+                    <option value="ja">Oui</option>
+                    <option value="nein">Non</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            </div>
+            <div class="step-actions">
+              <button id="detailsBackBtn" class="btn btn-ghost" type="button">Retour</button>
+              <button id="detailsNextBtn" class="btn btn-primary" type="button" disabled>Continuer</button>
+            </div>
+          </div>
+          <div class="step-right">
+            <div class="preview-card">
+              <div class="service-panel">
+                <div class="service-label">Information</div>
+                <div class="service-title">Compléter les informations</div>
+                <div class="service-body">Les champs s’adaptent au pack choisi. La formule combinée affiche les deux sections.</div>
+              </div>
+              <div class="preview-map" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="stepSummary" class="step form-step hidden">
+        <div class="step-card">
+          <div class="step-left">
+            <div class="progress">
+              <div class="progress-meta">
+                <span class="progress-label">Étape</span>
+                <span class="progress-count">4/4</span>
+              </div>
+              <div class="progress-track">
+                <span class="progress-fill" style="width: 100%;"></span>
+              </div>
+            </div>
+            <div class="step-kicker">Récapitulatif</div>
+            <h1 class="step-title">Tout en un coup d’œil</h1>
+            <p class="step-subtitle">Veuillez vérifier vos informations avant de finaliser.</p>
+            <div class="summary-block">
+              <div class="summary-title">Zone du projet</div>
+              <dl id="summaryArea" class="summary-list"></dl>
+            </div>
+            <div class="summary-block">
+              <div class="summary-title">Pack de services</div>
+              <dl id="summaryPackage" class="summary-list"></dl>
+            </div>
+            <div class="summary-block">
+              <div class="summary-title">Informations du projet</div>
+              <dl id="summaryDetails" class="summary-list"></dl>
+            </div>
+	            <div class="step-actions">
+	              <button id="summaryBackBtn" class="btn btn-ghost" type="button">Retour</button>
+	              <button id="summaryDownloadBtn" class="btn btn-subtle hidden" type="button">Télécharger le PDF</button>
+	              <button id="summaryFinishBtn" class="btn btn-primary" type="submit">Envoyer la demande</button>
+	            </div>
+          </div>
+          <div class="step-right">
+            <div class="preview-card">
+              <div class="service-panel">
+                <div class="service-label">Aperçu</div>
+                <div class="service-title">Zone du projet</div>
+                <div class="service-body">Aperçu issu du tracé ou du téléversement.</div>
+              </div>
+              <div id="summaryMap" class="summary-map" aria-hidden="true"></div>
+              <div id="summaryEmpty" class="summary-empty hidden">Aucune géométrie disponible.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+		      <div id="toolView" class="tool-view hidden">
+	        <div id="controls">
+	          <button id="controlsToggle" class="controls-toggle" type="button" aria-label="Ouvrir la liste des couches" aria-expanded="false">
+	            <img src="./images/PhHashDuotone.svg" class="icon" alt="" aria-hidden="true" />
+	          </button>
+	          <section class="panel layer-panel">
+	            <div class="panel-title">Couches</div>
+	            <div id="objectsList" class="list"></div>
+	          </section>
+	          <section class="panel hidden" id="bufferSection">
+	            <div class="panel-title">Zone tampon</div>
+	            <div class="row">
+	              <label>
+	                Distance (m) :
+	                <input id="bufferInput" type="number" min="0" step="1" value="25" />
+	              </label>
+	              <input id="bufferRange" type="range" min="0" max="200" step="1" value="25" />
+	            </div>
+	            <div class="row">
+	              <button id="applyBufferBtn" type="button" disabled>Appliquer la zone tampon</button>
+	            </div>
+	          </section>
+	        </div>
+	        <div id="map"></div>
+	        <div id="cursorHint" class="cursor-hint hidden" aria-hidden="true">Terminer par clic droit</div>
+	        <div id="mapFooter" aria-hidden="true">
+	          <div id="sourceLabel">dessin KML · par Trassify · Fond de carte : OpenStreetMap</div>
+	        </div>
+		        <div id="toolbar" class="toolbar">
+	          <div class="toolbar-inner" role="toolbar" aria-label="Outils">
+	            <button class="icon-btn tool-step-btn" id="toolBackBtnMobile" type="button" aria-label="Retour">
+	              <img src="./images/PhArrowLeft.svg" class="icon" alt="" aria-hidden="true" />
+	            </button>
+	            <div class="toolbar-tools tool-row">
+	              <button class="icon-btn" id="selectBtn" type="button" aria-label="Sélectionner un objet" data-tip="Sélection">
+	                <img src="./images/PhNavigationArrow.svg" class="icon" alt="" aria-hidden="true" />
+	              </button>
+	              <div class="draw-split">
+	                <button class="icon-btn draw-btn" id="startBtn" type="button" aria-label="Nouveau tracé" data-tip="Tracer">
+	                  <img src="./images/PhPenNib.svg" class="icon" alt="" aria-hidden="true" />
+	                </button>
+	                <button class="icon-btn dropdown-btn draw-toggle" id="drawMenuBtn" type="button" aria-label="Choisir le mode de tracé" data-tip="Choisir le mode">
+	                  <img src="./images/PhCaretDownLight.svg" class="icon" alt="" aria-hidden="true" />
+	                </button>
+	                <div class="draw-menu hidden" id="drawMenu">
+	                  <button class="draw-menu-item active" type="button" data-mode="polygon">
+	                    <img src="./images/PhPenNib.svg" class="icon" alt="" aria-hidden="true" />
+	                    <span>Polygone</span>
+	                  </button>
+	                  <button class="draw-menu-item" type="button" data-mode="line">
+	                    <img src="./images/PhRuler.svg" class="icon" alt="" aria-hidden="true" />
+	                    <span>Ligne</span>
+	                  </button>
+	                  <button class="draw-menu-item" type="button" data-mode="point">
+	                    <img src="./images/PhInfo.svg" class="icon" alt="" aria-hidden="true" />
+	                    <span>Point</span>
+	                  </button>
+	                  <button class="draw-menu-item" type="button" data-mode="attach">
+	                    <span class="plus-icon" aria-hidden="true">➕</span>
+	                    <span>Ajouter</span>
+	                  </button>
+	                </div>
+	              </div>
+	              <button class="icon-btn" id="bufferBtn" type="button" aria-label="Zone tampon" data-tip="Zone tampon" disabled>
+	                <img src="./images/PhBandaids.svg" class="icon" alt="" aria-hidden="true" />
+	              </button>
+	              <button class="icon-btn" id="measureBtn" type="button" aria-label="Mesurer une distance" data-tip="Mesurer">
+	                <img src="./images/PhRuler.svg" class="icon" alt="" aria-hidden="true" />
+	              </button>
+	              <span class="divider" aria-hidden="true"></span>
+	              <button class="icon-btn" id="kmlIconBtn" type="button" aria-label="Charger un KML" data-tip="Charger un KML">
+	                <img src="./images/PhUploadSimple.svg" class="icon" alt="" aria-hidden="true" />
+	              </button>
+	              <input id="kmlFile" type="file" accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz" style="display:none" />
+	            </div>
+	            <button class="icon-btn tool-step-btn" id="toolNextBtnMobile" type="button" aria-label="Continuer">
+	              <img src="./images/PhArrowRight.svg" class="icon" alt="" aria-hidden="true" />
+	            </button>
+	          </div>
+	        </div>
+        <div class="map-nav">
+          <div class="nav-left">
+            <div class="nav-logo-wrap">
+              <button class="nav-logo-btn" id="navMenuToggle" type="button" aria-label="Ouvrir le menu">
+                <img src="images/trassify-logo.svg" alt="Trassify" class="nav-logo" />
+                <img src="images/PhCaretDownLight.svg" class="nav-caret icon" alt="" aria-hidden="true" />
+              </button>
+              <div class="nav-menu" id="navMenu">
+                <a class="nav-menu-item" href="../rechtliches/impressum.html">Mentions légales</a>
+                <a class="nav-menu-item" href="../rechtliches/datenschutz.html">Politique de confidentialité</a>
+              </div>
+            </div>
+          </div>
+          <div class="nav-spacer" aria-hidden="true"></div>
+          <div class="nav-right">
+            <div id="basemapSwitcher" class="basemap-switch nav-basemap" aria-label="Choisir le fond de carte">
+              <button class="basemap-option" data-layer="none" id="baseNoneBtn" type="button" aria-pressed="false" title="Aucun fond de carte">
+                <span class="base-icon base-icon-none" aria-hidden="true"></span>
+              </button>
+              <button class="basemap-option active" data-layer="osm" id="baseOsmBtn" type="button" aria-pressed="true" title="OpenStreetMap">
+                <span class="base-icon base-icon-maptiler" aria-hidden="true"></span>
+              </button>
+              <button class="basemap-option" data-layer="sat" id="baseSatBtn" type="button" aria-pressed="false" title="Satellite">
+                <span class="base-icon base-icon-sat" aria-hidden="true"></span>
+              </button>
+            </div>
+            <span class="nav-divider" aria-hidden="true"></span>
+            <div class="nav-search" role="search">
+              <button id="searchToggle" class="search-toggle" type="button" title="Recherche" aria-label="Ouvrir la recherche">
+                <img src="./images/PhMagnifyingGlass.svg" class="icon" alt="" aria-hidden="true" />
+              </button>
+              <div id="searchPanel" class="search-panel hidden">
+                <div class="search-box">
+                  <input id="searchInput" type="text" placeholder="Lieu ou adresse" aria-label="Rechercher une adresse" />
+                  <button id="searchBtn" type="button" title="Rechercher" aria-label="Rechercher">
+                    <img src="./images/PhMagnifyingGlass.svg" class="icon" alt="" aria-hidden="true" />
+                  </button>
+                  <div id="searchSuggestions" class="search-suggestions hidden" role="listbox"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tool-nav">
+          <button id="toolBackBtn" class="btn btn-ghost" type="button">Retour</button>
+          <button id="toolNextBtn" class="btn btn-primary" type="button">Continuer</button>
+        </div>
+	      </div>
+
+	      <header class="site-nav" aria-label="Navigation">
+	        <div class="menubar left">
+	          <a class="logo-nav-wrapper" href="../" aria-label="Vers le site Trassify">
+	            <img src="images/trassify-logo.svg" alt="Trassify" loading="lazy" class="nav-logo" />
+	            <img src="images/trassify-logo-white.svg" alt="" aria-hidden="true" loading="lazy" class="nav-logo white" />
+	          </a>
+	        </div>
+	      </header>
+
+	      <footer class="site-footer" aria-label="Pied de page">
+	        <div class="site-footer-inner">
+	          <a class="site-footer-logo" href="../" aria-label="Ouvrir le site Trassify">
+	            <img src="images/trassify-logo-white.svg" alt="Trassify" />
+	          </a>
+	          <nav class="site-footer-links" aria-label="Mentions légales">
+	            <a href="../rechtliches/impressum.html">Mentions légales</a>
+	            <a href="../rechtliches/datenschutz.html">Politique de confidentialité</a>
+	            <a href="../rechtliches/agb.html">CGV</a>
+	          </nav>
+	        </div>
+	      </footer>
+	    </form>
+
+	    <script src="./main.js"></script>
+	    <script src="./fr-app.js"></script>
+	  </body>
+	  </html>

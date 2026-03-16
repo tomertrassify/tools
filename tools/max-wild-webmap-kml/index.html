@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KML Projektpaket Generator | Trassify Toolbox</title>
+    <meta
+      name="description"
+      content="KML-Datei hochladen, Projektpaket als ZIP erzeugen und die _projects.json fuer neue Projekte vorbereiten."
+    />
+    <link
+      rel="icon"
+      href="../../assets/theme/images/favicon.png"
+      type="image/png"
+    />
+    <link rel="stylesheet" href="../../assets/theme/trassify-theme.css" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"
+    ></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body class="trassify-theme-body tool-page tool-page--kml">
+    <div class="trassify-page">
+      <div class="trassify-page-lines" aria-hidden="true">
+        <div class="trassify-page-lines__outer">
+          <div class="trassify-page-lines__inner"></div>
+        </div>
+      </div>
+
+      <main class="trassify-shell">
+        <header class="trassify-topbar">
+          <a class="trassify-brand" href="../../">
+            <img
+              class="trassify-brand-mark"
+              src="../../assets/theme/images/brand-mark.svg"
+              alt="Trassify"
+            />
+            <span class="trassify-brand-caption">KML Projektpaket</span>
+          </a>
+
+          <div class="trassify-topbar-actions">
+            <a class="trassify-pill" href="../../#tool-grid">Zur Toolbox</a>
+          </div>
+        </header>
+
+        <section class="tool-intro">
+          <div class="tool-intro-copy">
+            <p class="trassify-eyebrow trassify-eyebrow--dark">Datenaufbereitung</p>
+            <h1 class="trassify-heading tool-intro-title">KML zu Projektpaket</h1>
+            <p class="trassify-copy">
+              KML importieren, Projektdaten eintragen und direkt ein sauberes
+              ZIP samt vorbereiteter Projektliste erzeugen.
+            </p>
+          </div>
+
+          <div class="tool-intro-chips">
+            <span class="tool-intro-chip">KML importieren</span>
+            <span class="tool-intro-chip">ZIP erzeugen</span>
+            <span class="tool-intro-chip">Projects JSON pflegen</span>
+          </div>
+        </section>
+
+        <section class="trassify-workspace trassify-workspace--split">
+          <form id="project-form" class="trassify-card form-card" novalidate>
+            <div class="trassify-panel-heading">
+              <p class="trassify-eyebrow trassify-eyebrow--dark">Projektdaten</p>
+              <h2 class="trassify-heading">Metadaten und KML</h2>
+              <p class="trassify-copy">
+                Alle Felder werden direkt fuer das Projektpaket und die
+                optionale Projektliste verwendet.
+              </p>
+            </div>
+
+            <div class="fields trassify-field-grid">
+              <label class="trassify-label">
+                <span>Projekt</span>
+                <input
+                  class="trassify-input"
+                  type="text"
+                  name="projectName"
+                  required
+                />
+              </label>
+
+              <label class="trassify-label">
+                <span>Status</span>
+                <input
+                  class="trassify-input"
+                  type="url"
+                  name="statusUrl"
+                  required
+                />
+              </label>
+
+              <label class="trassify-label">
+                <span>Download</span>
+                <input
+                  class="trassify-input"
+                  type="url"
+                  name="downloadToken"
+                  required
+                />
+              </label>
+
+              <label class="trassify-label">
+                <span>Baubeginn</span>
+                <input
+                  class="trassify-input"
+                  type="date"
+                  name="baubeginn"
+                  required
+                />
+              </label>
+            </div>
+
+            <section
+              id="dropzone"
+              class="dropzone"
+              role="button"
+              aria-label="KML Datei auswählen"
+              tabindex="0"
+            >
+              <input
+                id="kml-input"
+                type="file"
+                accept=".kml,application/vnd.google-earth.kml+xml"
+                hidden
+              />
+              <div class="dropzone-copy">
+                <p class="dropzone-title">KML hier ablegen</p>
+                <p class="dropzone-subtitle">oder klicken zum Auswaehlen</p>
+              </div>
+              <p id="file-name" class="file-name">Noch keine Datei gewaehlt.</p>
+            </section>
+
+            <button type="submit" class="trassify-button submit-btn">
+              <span>ZIP erstellen</span>
+            </button>
+          </form>
+
+          <section class="trassify-card projects-section" aria-label="Projects JSON">
+            <div class="trassify-panel-heading">
+              <p class="trassify-eyebrow trassify-eyebrow--dark">Projektliste</p>
+              <h2 class="trassify-heading">_projects.json</h2>
+              <p class="trassify-copy projects-hint">
+                Angezeigt werden nur Projektnamen. Nach ZIP-Erstellung kannst du
+                das neue Projekt optional zur Liste hinzufuegen.
+              </p>
+            </div>
+
+            <p id="pending-project" class="pending-project">
+              Kein neues Projekt zum Hinzufuegen.
+            </p>
+
+            <div class="projects-actions">
+              <button
+                id="add-project-btn"
+                type="button"
+                class="trassify-button trassify-button--light secondary-btn"
+                disabled
+              >
+                <span>Projekt hinzufuegen</span>
+              </button>
+              <button
+                id="copy-entry-btn"
+                type="button"
+                class="trassify-button trassify-button--light secondary-btn"
+                disabled
+              >
+                <span>Eintrag kopieren</span>
+              </button>
+              <button
+                id="copy-projects-btn"
+                type="button"
+                class="trassify-button trassify-button--light secondary-btn"
+                disabled
+              >
+                <span>JSON kopieren</span>
+              </button>
+            </div>
+
+            <ul id="projects-name-list" class="projects-name-list"></ul>
+          </section>
+        </section>
+
+        <p id="status-message" class="trassify-status status-message" aria-live="polite"></p>
+      </main>
+    </div>
+  </body>
+</html>

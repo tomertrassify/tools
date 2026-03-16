@@ -1,0 +1,7 @@
+{
+  "name": "EML JSON Converter",
+  "description": "Fuellt eine EML-Vorlage aus einer JSON-Datei und laedt die fertige .eml direkt herunter.",
+  "category": "E-Mail",
+  "icon": "E",
+  "order": 1
+}

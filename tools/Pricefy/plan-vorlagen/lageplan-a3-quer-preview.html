@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <base href="../" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Planvorlage Vorschau</title>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="plan-vorlagen/plan-template-pdf-renderer.js?v=15"></script>
+    <script src="plan-vorlagen/lageplan-a3-quer.js?v=19"></script>
+    <style>
+      @font-face {
+        font-family: "Scandia";
+        src: url("assets/fonts/scandia.otf") format("opentype");
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Scandia";
+        src: url("assets/fonts/scandia-bold.otf") format("opentype");
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+      }
+
+      :root {
+        color-scheme: light;
+        --bg: #eef1e9;
+        --panel: rgba(255, 255, 255, 0.92);
+        --panel-border: rgba(143, 174, 139, 0.28);
+        --text: #1d1d1b;
+        --muted: #5f655c;
+        --line: rgba(29, 29, 27, 0.12);
+        --brand: #8fae8b;
+        --brand-strong: #7f9d7b;
+        --page-shadow: 0 24px 80px rgba(34, 41, 33, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Scandia", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(166, 196, 161, 0.35), transparent 30%),
+          linear-gradient(180deg, #f7f9f4 0%, var(--bg) 100%);
+      }
+
+      .preview-layout {
+        display: grid;
+        grid-template-columns: 294px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .preview-sidebar {
+        padding: 28px 24px;
+        border-right: 1px solid var(--panel-border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 249, 244, 0.9));
+        backdrop-filter: blur(12px);
+      }
+
+      .preview-title {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.1;
+      }
+
+      .preview-copy {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .preview-meta {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border: 1px solid var(--panel-border);
+        border-radius: 18px;
+        background: var(--panel);
+      }
+
+      .preview-meta strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+      }
+
+      .preview-meta code {
+        font-size: 12px;
+        word-break: break-word;
+      }
+
+      .preview-form {
+        margin-top: 18px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .preview-field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .preview-field label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .preview-field input,
+      .preview-field textarea {
+        width: 100%;
+        border: 1px solid rgba(29, 29, 27, 0.12);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--text);
+        font: inherit;
+        font-size: 14px;
+        padding: 10px 12px;
+        outline: none;
+      }
+
+      .preview-field input:focus,
+      .preview-field textarea:focus {
+        border-color: rgba(143, 174, 139, 0.9);
+        box-shadow: 0 0 0 4px rgba(166, 196, 161, 0.22);
+      }
+
+      .preview-field textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+
+      .preview-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--panel-border);
+        border-radius: 14px;
+        background: var(--panel);
+        font-size: 13px;
+      }
+
+      .preview-toggle input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--brand-strong);
+      }
+
+      .preview-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .preview-btn {
+        border: 0;
+        border-radius: 999px;
+        padding: 11px 16px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+
+      .preview-btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .preview-btn-primary {
+        color: #fff;
+        background: linear-gradient(135deg, #a6c4a1, var(--brand));
+      }
+
+      .preview-btn-secondary {
+        color: var(--text);
+        background: rgba(29, 29, 27, 0.08);
+      }
+
+      .preview-stage {
+        min-width: 0;
+        padding: 18px;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        overflow: auto;
+      }
+
+      .preview-pdf-shell {
+        width: min(100%, 1520px);
+        display: grid;
+        gap: 12px;
+        align-content: start;
+      }
+
+      .preview-pdf-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid var(--panel-border);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(10px);
+      }
+
+      .preview-pdf-status {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .preview-pdf-status.is-error {
+        color: #b74141;
+      }
+
+      .preview-open-link {
+        color: var(--text);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .preview-open-link:hover {
+        text-decoration: underline;
+      }
+
+      .preview-pdf-frame-wrap {
+        width: 100%;
+        min-height: 240px;
+      }
+
+      .preview-pdf-canvas-surface {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .preview-pdf-canvas {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: var(--page-shadow);
+      }
+
+      @media (max-width: 1080px) {
+        .preview-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .preview-sidebar {
+          border-right: 0;
+          border-bottom: 1px solid var(--panel-border);
+        }
+
+        .preview-stage {
+          min-height: 60vh;
+        }
+
+        .preview-pdf-meta {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preview-layout">
+      <aside class="preview-sidebar">
+        <h1 class="preview-title">Planvorlage Vorschau</h1>
+        <p class="preview-copy">
+          Diese Seite erzeugt eine echte PDF-Vorschau mit demselben Renderer wie der Export.
+          Aenderungen in <code>plan-vorlagen/lageplan-a3-quer.js</code> kannst du hier direkt
+          gegenpruefen.
+        </p>
+
+        <div class="preview-meta">
+          <strong>Aktive Vorlage</strong>
+          <code>plan-vorlagen/lageplan-a3-quer.js</code>
+        </div>
+
+        <form id="preview-form" class="preview-form">
+          <div class="preview-field">
+            <label for="preview-projektname">Projektname</label>
+            <input id="preview-projektname" name="projektname" type="text" value="Musterprojekt Nord" />
+          </div>
+          <div class="preview-field">
+            <label for="preview-kunde">Kunde</label>
+            <input id="preview-kunde" name="kunde" type="text" value="Max Wild GmbH" />
+          </div>
+          <div class="preview-field">
+            <label for="preview-auftraggeber">Auftraggeber</label>
+            <input id="preview-auftraggeber" name="auftraggeber" type="text" value="Gottlob Brodbeck GmbH" />
+          </div>
+          <div class="preview-field">
+            <label for="preview-bauleitung">Bauleitung</label>
+            <input id="preview-bauleitung" name="bauleitung" type="text" value="Robin Reichl" />
+          </div>
+          <div class="preview-field">
+            <label for="preview-kontakt">Kontakt Bauleitung</label>
+            <input id="preview-kontakt" name="kontaktBauleitung" type="text" value="0151 14036666" />
+          </div>
+          <div class="preview-field">
+            <label for="preview-baubeginn">Baubeginn</label>
+            <input id="preview-baubeginn" name="baubeginn" type="text" value="15.01.2026" />
+          </div>
+          <div class="preview-field">
+            <label for="preview-datum">Exportdatum</label>
+            <input id="preview-datum" name="datum" type="text" value="04.03.2026" />
+          </div>
+          <div class="preview-field">
+            <label for="preview-scale">Maßstab</label>
+            <input id="preview-scale" name="scaleLabel" type="text" value="1:1000" />
+          </div>
+          <div class="preview-field">
+            <label for="preview-kst">Kostenstelle</label>
+            <input id="preview-kst" name="kst" type="text" value="253112" />
+          </div>
+          <div class="preview-field">
+            <label for="preview-adresse">Adresse</label>
+            <input
+              id="preview-adresse"
+              name="strassenadresse"
+              type="text"
+              value="Musterweg 7, 72655 Altdorf"
+            />
+          </div>
+          <div class="preview-field">
+            <label for="preview-beschreibung">Projektbeschreibung</label>
+            <textarea id="preview-beschreibung" name="beschreibung">HDD-Bohrung(en) und Leitungsquerung im nördlichen Abschnitt.</textarea>
+          </div>
+
+          <label class="preview-toggle">
+            <input id="preview-debug" type="checkbox" />
+            Debug-Boxen im PDF einblenden
+          </label>
+
+          <div class="preview-actions">
+            <button id="preview-render" class="preview-btn preview-btn-primary" type="submit">
+              Aktualisieren
+            </button>
+            <button id="preview-reset" class="preview-btn preview-btn-secondary" type="button">
+              Zurücksetzen
+            </button>
+          </div>
+        </form>
+      </aside>
+
+      <main class="preview-stage" id="preview-stage">
+        <div class="preview-pdf-shell">
+          <div class="preview-pdf-meta">
+            <div id="preview-status" class="preview-pdf-status">
+              PDF-Vorschau wird aufgebaut.
+            </div>
+            <a
+              id="preview-open-pdf"
+              class="preview-open-link"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              hidden
+            >
+              PDF in neuem Tab oeffnen
+            </a>
+          </div>
+          <div class="preview-pdf-frame-wrap">
+            <div class="preview-pdf-canvas-surface" id="preview-pdf-canvas-surface">
+              <canvas
+                id="preview-pdf-canvas"
+                class="preview-pdf-canvas"
+                aria-label="PDF-Vorschau der Planvorlage"
+              ></canvas>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      (function initTemplatePreview() {
+        const template = window.projectPlanTemplateRegistry?.["lageplan-a3-quer"];
+        const renderer = window.planTemplatePdfRenderer;
+        const form = document.getElementById("preview-form");
+        const resetBtn = document.getElementById("preview-reset");
+        const debugToggle = document.getElementById("preview-debug");
+        const statusNode = document.getElementById("preview-status");
+        const openPdfLink = document.getElementById("preview-open-pdf");
+        const pdfCanvas = document.getElementById("preview-pdf-canvas");
+        const pdfCanvasSurface = document.getElementById("preview-pdf-canvas-surface");
+
+        if (!template || !renderer || !form || !statusNode || !openPdfLink || !pdfCanvas || !pdfCanvasSurface) {
+          return;
+        }
+        if (!window.pdfjsLib) return;
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+
+        const defaultValues = {
+          projektname: "Musterprojekt Nord",
+          kunde: "Max Wild GmbH",
+          auftraggeber: "Gottlob Brodbeck GmbH",
+          bauleitung: "Robin Reichl",
+          kontaktBauleitung: "0151 14036666",
+          baubeginn: "15.01.2026",
+          datum: "04.03.2026",
+          scaleLabel: "1:1000",
+          kst: "253112",
+          strassenadresse: "Musterweg 7, 72655 Altdorf",
+          beschreibung: "HDD-Bohrung(en) und Leitungsquerung im nördlichen Abschnitt."
+        };
+        let scheduledRenderId = 0;
+        let currentPdfUrl = "";
+        let renderToken = 0;
+        let currentPdfDocument = null;
+
+        function setStatus(message, isError = false) {
+          statusNode.textContent = String(message || "");
+          statusNode.classList.toggle("is-error", !!isError);
+        }
+
+        function deriveLocationLabel(meta) {
+          const address = String(meta?.strassenadresse || "").trim();
+          if (!address) return String(meta?.projektname || "").trim() || "-";
+          const parts = address
+            .split(",")
+            .map(part => part.trim())
+            .filter(Boolean);
+          return parts[parts.length - 1] || address;
+        }
+
+        function buildReferenceId(seedText) {
+          const seed = String(seedText || "").trim();
+          if (!seed) return "ID: 000000";
+          let hash = 0;
+          for (let idx = 0; idx < seed.length; idx += 1) {
+            hash = (hash * 31 + seed.charCodeAt(idx)) % 1000000;
+          }
+          return `ID: ${String(hash).padStart(6, "0")}`;
+        }
+
+        function collectMeta() {
+          const data = new FormData(form);
+          return Object.fromEntries(data.entries());
+        }
+
+        function resolveText(item, meta, scaleDenominator) {
+          const raw = String(item?.templateText ?? item?.text ?? "");
+          if (typeof template.resolveText !== "function") return raw;
+          const resolved = template.resolveText({
+            templateText: raw,
+            meta,
+            baseName: meta.projektname || "Projektgebiet",
+            helpers: {
+              normalizeText: value => String(value || "").replace(/\r\n?/g, "\n"),
+              getBasemapLicenseText: () => "© OpenStreetMap contributors · © MapTiler · ALKIS",
+              buildReferenceId,
+              deriveLocationLabel,
+              getScaleLabel: () => renderer.getScaleLabel(scaleDenominator),
+              getScaleDenominator: () => scaleDenominator
+            }
+          });
+          return resolved == null ? raw : String(resolved);
+        }
+
+        async function renderPdfPage(pdfBlob, token) {
+          const bytes = await pdfBlob.arrayBuffer();
+          if (token !== renderToken) return;
+          const loadingTask = window.pdfjsLib.getDocument({ data: bytes });
+          const pdfDocument = await loadingTask.promise;
+          if (token !== renderToken) {
+            await pdfDocument.destroy();
+            return;
+          }
+          if (currentPdfDocument && typeof currentPdfDocument.destroy === "function") {
+            try {
+              await currentPdfDocument.destroy();
+            } catch (_error) {
+              /* noop */
+            }
+          }
+          currentPdfDocument = pdfDocument;
+          const page = await pdfDocument.getPage(1);
+          if (token !== renderToken) return;
+          const baseViewport = page.getViewport({ scale: 1 });
+          const availableWidth = Math.max(320, pdfCanvasSurface.clientWidth || 1200);
+          const cssScale = availableWidth / baseViewport.width;
+          const viewport = page.getViewport({ scale: cssScale });
+          const deviceScale = Math.max(1, window.devicePixelRatio || 1);
+          pdfCanvas.width = Math.round(viewport.width * deviceScale);
+          pdfCanvas.height = Math.round(viewport.height * deviceScale);
+          pdfCanvas.style.width = `${viewport.width}px`;
+          pdfCanvas.style.height = `${viewport.height}px`;
+          const ctx = pdfCanvas.getContext("2d");
+          if (!ctx) return;
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+          await page.render({
+            canvasContext: ctx,
+            viewport,
+            transform: deviceScale === 1 ? null : [deviceScale, 0, 0, deviceScale, 0, 0]
+          }).promise;
+        }
+
+        async function renderPdf() {
+          const meta = collectMeta();
+          const definition = template.definition;
+          if (!definition) return;
+          const scaleDenominator = renderer.normalizeScaleDenominator(meta?.scaleLabel, 1000);
+          const currentToken = ++renderToken;
+          setStatus(
+            "PDF-Vorschau wird aktualisiert. Layout ist exportidentisch, der Karteninhalt hier ein Platzhalter."
+          );
+          try {
+            const mapDataUrl = renderer.createPlaceholderMapDataUrl(definition.mapFrame, {
+              widthPx: 2200
+            });
+            const pdfBlob = await renderer.buildPdfBlob({
+              definition,
+              meta,
+              baseName: meta.projektname || "Projektgebiet",
+              mapDataUrl,
+              compress: true,
+              scaleDenominator,
+              debug: !!debugToggle?.checked,
+              resolveText: item => resolveText(item, meta, scaleDenominator)
+            });
+            if (!pdfBlob) {
+              throw new Error("PDF konnte nicht erstellt werden.");
+            }
+            const nextPdfUrl = URL.createObjectURL(pdfBlob);
+            if (currentToken !== renderToken) {
+              URL.revokeObjectURL(nextPdfUrl);
+              return;
+            }
+            if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+            currentPdfUrl = nextPdfUrl;
+            openPdfLink.href = nextPdfUrl;
+            openPdfLink.hidden = false;
+            await renderPdfPage(pdfBlob, currentToken);
+            setStatus(
+              "Echte PDF-Vorschau mit demselben Renderer wie im Export. Karteninhalt hier als Platzhalter."
+            );
+          } catch (error) {
+            setStatus(
+              `PDF-Vorschau konnte nicht aufgebaut werden: ${error?.message || "unbekannter Fehler"}`,
+              true
+            );
+          }
+        }
+
+        function scheduleRender() {
+          window.clearTimeout(scheduledRenderId);
+          scheduledRenderId = window.setTimeout(() => {
+            renderPdf();
+          }, 140);
+        }
+
+        form.addEventListener("submit", event => {
+          event.preventDefault();
+          renderPdf();
+        });
+
+        form.addEventListener("input", scheduleRender);
+        debugToggle?.addEventListener("change", renderPdf);
+
+        resetBtn?.addEventListener("click", () => {
+          Object.entries(defaultValues).forEach(([key, value]) => {
+            const field = form.elements.namedItem(key);
+            if (field) field.value = value;
+          });
+          if (debugToggle) debugToggle.checked = false;
+          renderPdf();
+        });
+
+        window.addEventListener("beforeunload", () => {
+          if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+        });
+        window.addEventListener("resize", scheduleRender);
+
+        renderPdf();
+      })();
+    </script>
+  </body>
+</html>

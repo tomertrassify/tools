@@ -1,0 +1,7 @@
+{
+  "name": "KML Projektpaket Generator",
+  "description": "Erstellt aus einer KML-Datei ein Projektpaket als ZIP und hilft beim Aktualisieren der _projects.json.",
+  "category": "Datenaufbereitung",
+  "icon": "K",
+  "order": 2
+}
