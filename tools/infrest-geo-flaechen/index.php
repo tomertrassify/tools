@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KML zu Polygon-GeoJSON</title>
+  <style>
+    :root {
+      --bg: #f5efe3;
+      --bg-strong: #f0e4cf;
+      --surface: rgba(255, 251, 244, 0.84);
+      --surface-strong: #fff8ee;
+      --text: #1f1a16;
+      --muted: #665d56;
+      --line: rgba(31, 26, 22, 0.12);
+      --accent: #b9471d;
+      --accent-strong: #922f0d;
+      --success: #1d6a52;
+      --shadow: 0 28px 80px rgba(57, 35, 16, 0.12);
+      --radius: 28px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(185, 71, 29, 0.14), transparent 32%),
+        radial-gradient(circle at right center, rgba(17, 80, 68, 0.14), transparent 28%),
+        linear-gradient(180deg, var(--bg) 0%, #f7f2ea 44%, #efe7d8 100%);
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(31, 26, 22, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(31, 26, 22, 0.035) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      mask-image: radial-gradient(circle at center, black 45%, transparent 88%);
+    }
+
+    main {
+      width: min(920px, 100%);
+      position: relative;
+    }
+
+    .shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: calc(var(--radius) + 6px);
+      border: 1px solid rgba(31, 26, 22, 0.09);
+      background: linear-gradient(180deg, rgba(255, 251, 245, 0.92), rgba(255, 247, 236, 0.86));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .shell::before,
+    .shell::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(10px);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .shell::before {
+      width: 240px;
+      height: 240px;
+      top: -80px;
+      right: -60px;
+      background: rgba(185, 71, 29, 0.18);
+    }
+
+    .shell::after {
+      width: 180px;
+      height: 180px;
+      left: -48px;
+      bottom: -60px;
+      background: rgba(29, 106, 82, 0.14);
+    }
+
+    .content {
+      position: relative;
+      padding: 42px;
+      display: grid;
+      gap: 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(185, 71, 29, 0.08);
+      color: var(--accent-strong);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      font-size: clamp(2.5rem, 5vw, 4.3rem);
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+      max-width: 11ch;
+    }
+
+    .lede {
+      margin: 0;
+      max-width: 68ch;
+      color: var(--muted);
+      font-size: 1.03rem;
+      line-height: 1.7;
+    }
+
+    .specs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .spec {
+      padding: 16px 18px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .spec strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .spec span {
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+
+    .dropzone {
+      position: relative;
+      border: 2px dashed rgba(31, 26, 22, 0.18);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, rgba(255, 248, 237, 0.85), rgba(250, 241, 227, 0.92)),
+        var(--surface);
+      padding: 36px 28px;
+      text-align: center;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+      cursor: pointer;
+    }
+
+    .dropzone.dragover {
+      transform: translateY(-2px) scale(1.01);
+      border-color: rgba(185, 71, 29, 0.42);
+      background:
+        linear-gradient(180deg, rgba(255, 241, 225, 0.96), rgba(252, 236, 212, 0.98)),
+        var(--surface-strong);
+    }
+
+    .dropzone strong {
+      display: block;
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .dropzone p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .dropzone .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 180px;
+      margin-top: 22px;
+      padding: 14px 20px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      box-shadow: 0 12px 30px rgba(146, 47, 13, 0.18);
+    }
+
+    .status {
+      min-height: 28px;
+      padding: 0 4px;
+      font-size: 0.98rem;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .status[data-tone="busy"] {
+      color: var(--accent-strong);
+    }
+
+    .status[data-tone="error"] {
+      color: #a22622;
+    }
+
+    .status[data-tone="success"] {
+      color: var(--success);
+    }
+
+    .footnote {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    @media (max-width: 760px) {
+      .content {
+        padding: 24px;
+      }
+
+      .specs {
+        grid-template-columns: 1fr;
+      }
+
+      .dropzone {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="shell">
+      <div class="content">
+        <div class="eyebrow">KML Upload · Direktdownload</div>
+        <div>
+          <h1>KML rein. Polygon-GeoJSON raus.</h1>
+          <p class="lede">
+            Lade eine KML per Drag-and-Drop hoch. Das Tool erzeugt daraus immer Polygon-Geometrien im
+            WGS84-System. Wenn Fläche oder Umfang zu groß sind, wird die Geometrie automatisch in mehrere
+            zusammenhängende GeoJSON-Dateien aufgeteilt.
+          </p>
+        </div>
+
+        <div class="specs">
+          <article class="spec">
+            <strong>Immer WGS84</strong>
+            <span>Ausgabe ausschließlich als GeoJSON in `EPSG:4326`.</span>
+          </article>
+          <article class="spec">
+            <strong>Immer Polygon</strong>
+            <span>Mehrere Flächen werden zu einer einzelnen Polygon-Fläche verbunden.</span>
+          </article>
+          <article class="spec">
+            <strong>Automatische Teilung</strong>
+            <span>Grenzen: `1.500.000 m²` Fläche und `12.000 m` Umfang pro Ausgabe.</span>
+          </article>
+        </div>
+
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept=".kml">
+          <strong>KML hier ablegen oder Datei auswählen</strong>
+          <p>Bei einem einzelnen Ergebnis bekommst du direkt eine `.geojson`. Bei mehreren Teilen gibt es automatisch eine ZIP mit allen GeoJSONs.</p>
+          <span class="cta">KML auswählen</span>
+        </label>
+
+        <div class="status" id="status" aria-live="polite"></div>
+
+        <div class="footnote">
+          Das Upload-Feld startet die Konvertierung sofort. Es werden nur KML-Dateien akzeptiert.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const statusEl = document.getElementById('status');
+
+    const setStatus = (message, tone = '') => {
+      statusEl.textContent = message;
+      if (tone) {
+        statusEl.dataset.tone = tone;
+        return;
+      }
+      delete statusEl.dataset.tone;
+    };
+
+    const getDownloadName = (contentDisposition, fallbackName) => {
+      if (!contentDisposition) {
+        return fallbackName;
+      }
+
+      const utf8Match = contentDisposition.match(/filename\\*=UTF-8''([^;]+)/i);
+      if (utf8Match) {
+        return decodeURIComponent(utf8Match[1]);
+      }
+
+      const plainMatch = contentDisposition.match(/filename="([^"]+)"/i);
+      if (plainMatch) {
+        return decodeURIComponent(plainMatch[1]);
+      }
+
+      return fallbackName;
+    };
+
+    const triggerDownload = async (file) => {
+      if (!file) {
+        return;
+      }
+
+      const extension = file.name.toLowerCase().split('.').pop();
+      if (extension !== 'kml') {
+        setStatus('Bitte nur `.kml` hochladen.', 'error');
+        fileInput.value = '';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('kml', file);
+      setStatus('KML wird verarbeitet. Polygon-Geometrie und Teilflächen werden erzeugt …', 'busy');
+
+      try {
+        const response = await fetch('convert.php', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          let errorMessage = 'Die Konvertierung ist fehlgeschlagen.';
+          try {
+            const payload = await response.json();
+            if (payload && payload.error) {
+              errorMessage = payload.error;
+            }
+          } catch (error) {
+          }
+          throw new Error(errorMessage);
+        }
+
+        const blob = await response.blob();
+        const partCount = response.headers.get('X-Geojson-Part-Count') || '1';
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const fallbackName = partCount === '1' ? 'konvertiert.geojson' : 'konvertiert.zip';
+        const downloadName = getDownloadName(contentDisposition, fallbackName);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = downloadName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+
+        if (partCount === '1') {
+          setStatus('Fertig. Die GeoJSON-Datei wurde heruntergeladen.', 'success');
+        } else {
+          setStatus(`Fertig. ${partCount} GeoJSON-Dateien wurden als ZIP heruntergeladen.`, 'success');
+        }
+      } catch (error) {
+        setStatus(error.message || 'Die Konvertierung ist fehlgeschlagen.', 'error');
+      } finally {
+        fileInput.value = '';
+      }
+    };
+
+    dropzone.addEventListener('dragenter', () => {
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', (event) => {
+      if (!dropzone.contains(event.relatedTarget)) {
+        dropzone.classList.remove('dragover');
+      }
+    });
+
+    dropzone.addEventListener('drop', (event) => {
+      event.preventDefault();
+      dropzone.classList.remove('dragover');
+      const [file] = event.dataTransfer.files;
+      triggerDownload(file);
+    });
+
+    fileInput.addEventListener('change', () => {
+      const [file] = fileInput.files;
+      triggerDownload(file);
+    });
+  </script>
+</body>
+</html>
