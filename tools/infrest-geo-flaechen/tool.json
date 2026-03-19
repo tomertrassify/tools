@@ -1,0 +1,7 @@
+{
+  "name": "KML zu Polygon-GeoJSON",
+  "description": "Konvertiert KML-Dateien in Polygon-GeoJSON und teilt zu grosse Geometrien automatisch in mehrere Downloads auf.",
+  "category": "Datenaufbereitung",
+  "icon": "G",
+  "order": 4
+}

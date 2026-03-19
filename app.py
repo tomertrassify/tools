@@ -51,6 +51,8 @@ def load_tool_metadata(tool_dir: Path) -> dict[str, str | int]:
     slug = tool_dir.name
     index_path = tool_dir / "index.html"
     if not index_path.exists():
+        index_path = tool_dir / "index.php"
+    if not index_path.exists():
         return {}
 
     document = index_path.read_text(encoding="utf-8")

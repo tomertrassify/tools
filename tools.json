@@ -27,6 +27,15 @@
     "order": 3
   },
   {
+    "slug": "infrest-geo-flaechen",
+    "name": "KML zu Polygon-GeoJSON",
+    "description": "Konvertiert KML-Dateien in Polygon-GeoJSON und teilt zu grosse Geometrien automatisch in mehrere Downloads auf.",
+    "category": "Datenaufbereitung",
+    "icon": "G",
+    "path": "./tools/infrest-geo-flaechen/",
+    "order": 4
+  },
+  {
     "slug": "Pricefy",
     "name": "Pricefy Preisrechner",
     "description": "Pricefy ist ein Preisrechner für die schnelle Kalkulation von Projekten und Leistungen.",
