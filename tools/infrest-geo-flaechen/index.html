@@ -176,6 +176,12 @@
         var(--surface-strong);
     }
 
+    .dropzone.is-disabled {
+      cursor: not-allowed;
+      opacity: 0.62;
+      transform: none;
+    }
+
     .dropzone strong {
       display: block;
       font-size: 1.2rem;
@@ -302,6 +308,8 @@
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const statusEl = document.getElementById('status');
+    const unsupportedMessage = 'Dieses Tool braucht PHP und das QGIS-Backend. Auf dem statischen Netlify-Deploy ist nur die Vorschauseite verfuegbar.';
+    let backendAvailable = true;
 
     const setStatus = (message, tone = '') => {
       statusEl.textContent = message;
@@ -310,6 +318,27 @@
         return;
       }
       delete statusEl.dataset.tone;
+    };
+
+    const setDropzoneEnabled = (enabled) => {
+      fileInput.disabled = !enabled;
+      dropzone.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+      dropzone.classList.toggle('is-disabled', !enabled);
+      if (!enabled) {
+        dropzone.classList.remove('dragover');
+      }
+    };
+
+    const probeBackend = async () => {
+      try {
+        const response = await fetch('convert.php', {
+          method: 'HEAD',
+          cache: 'no-store'
+        });
+        return response.status === 405;
+      } catch (error) {
+        return false;
+      }
     };
 
     const getDownloadName = (contentDisposition, fallbackName) => {
@@ -331,6 +360,11 @@
     };
 
     const triggerDownload = async (file) => {
+      if (!backendAvailable) {
+        setStatus(unsupportedMessage, 'error');
+        return;
+      }
+
       if (!file) {
         return;
       }
@@ -391,10 +425,16 @@
     };
 
     dropzone.addEventListener('dragenter', () => {
+      if (!backendAvailable) {
+        return;
+      }
       dropzone.classList.add('dragover');
     });
 
     dropzone.addEventListener('dragover', (event) => {
+      if (!backendAvailable) {
+        return;
+      }
       event.preventDefault();
       dropzone.classList.add('dragover');
     });
@@ -406,6 +446,9 @@
     });
 
     dropzone.addEventListener('drop', (event) => {
+      if (!backendAvailable) {
+        return;
+      }
       event.preventDefault();
       dropzone.classList.remove('dragover');
       const [file] = event.dataTransfer.files;
@@ -416,6 +459,19 @@
       const [file] = fileInput.files;
       triggerDownload(file);
     });
+
+    const initialize = async () => {
+      backendAvailable = await probeBackend();
+      setDropzoneEnabled(backendAvailable);
+      if (!backendAvailable) {
+        setStatus(unsupportedMessage, 'error');
+        return;
+      }
+
+      setStatus('KML hier ablegen oder Datei auswaehlen, um die Konvertierung zu starten.');
+    };
+
+    initialize();
   </script>
 </body>
 </html>

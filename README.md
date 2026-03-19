@@ -73,3 +73,10 @@ Optionale Felder:
 - Jedes Tool wird unter `/tools/<slug>/` ausgeliefert.
 - Assets innerhalb eines Tool-Ordners koennen relativ eingebunden werden.
 - Tools bleiben voneinander getrennt, solange jedes Tool seine Dateien im eigenen Ordner behaelt.
+
+## Wichtiger Netlify-Hinweis
+
+- Netlify deployed dieses Repo statisch.
+- Ein Tool braucht deshalb immer eine `index.html` als Einstiegspunkt.
+- Dateien wie `convert.php` oder andere serverseitige Schritte laufen auf Netlify nicht.
+- Tools mit PHP-, Python-, QGIS- oder anderen Backend-Abhaengigkeiten brauchen ein passendes Server-Hosting fuer die eigentliche Verarbeitung.
